@@ -86,11 +86,9 @@ public class NomenclatureStringParser {
                 break;
             }
             case SORT: {
-                regExReply = "((\\d-?(ый)?)|высш+.?(ий)?)\\s?сорт|в/с";//"в/с|\\d\\-?(ый)?s?сорт|высший сорт"
+                regExReply = "((\\d-?(ый)?)|высш+.(ий)?)\\s?сорт|в/с";
                 break;
             }
-
-
         }
         return regExReply;
     }
