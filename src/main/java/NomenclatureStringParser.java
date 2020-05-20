@@ -1,6 +1,7 @@
 package main.java;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,28 +10,31 @@ import java.util.regex.Pattern;
 
 public class NomenclatureStringParser {
 
+
     private String stringForParse;
+    private String stringRest;
     private Map<PartsOfString, List<String>> partsOfNomenclatureString = new HashMap();
-    //private String mainUnit = "(г|гр|кг|мл|л|грамм)\\b";
-    boolean testCall = false;
+    boolean testCall;
 
     public NomenclatureStringParser(String stringForParse, boolean testCall) {
         this.stringForParse = stringForParse;
         this.testCall = testCall;
+        stringRest = stringForParse;
     }
 
     public NomenclatureStringParser(String stringForParse) {
-        this.stringForParse = stringForParse;
+        this(stringForParse, false);
     }
 
     public static void main(String[] args) throws FileNotFoundException {
 
-        String testFilePath = "/home/dmitryk/IdeaProjects/rozn_NomenclatureMapper/src/testFilePath";
+        MyProjectSettings settings = MyProjectSettings.getInstance();
+        String testFilePath = settings.getProjectPath() + "/SettingsDir/testFilePath";
         NomenclatureStringParser testStringParser = null;
 
         try(BufferedReader reader = new BufferedReader(new FileReader(testFilePath))) {
             String stringForParse = reader.readLine();
-            testStringParser = new NomenclatureStringParser(stringForParse);
+            testStringParser = new NomenclatureStringParser(stringForParse, true);
             reader.close();
         } catch (IOException ioException) {
             ioException.printStackTrace();
@@ -38,26 +42,80 @@ public class NomenclatureStringParser {
 
         if (testStringParser == null) return;
 
-        testStringParser.getUnit();
+        ArrayList<PartsOfString> testList = new ArrayList<>();
+        testList.add(PartsOfString.SORT);
+
+        NomenclatureStringParser finalTestStringParser = testStringParser;
+        testList.forEach(x -> finalTestStringParser.findValueByRegEx(x));
+        //testStringParser.findValueByRegEx(PartsOfString.UNIT_WITH_COUNT);
 
 
 
     }
 
-    private void getUnit() {
-        final String mainUnitRegExp = "";
-        String reply = "(\\d+(.|,))?\\d+\\s?+(г|гр|кг|мл|л|грамм)\\b";
+    private String regExSwitcher(PartsOfString partOfString) {
+        String regExReply = "";
+        switch (partOfString) {
+            case UNIT_WITH_COUNT : {
+                regExReply = "(\\d+(.|,))?\\d+\\s?+(г|гр|кг|мл|л|грамм)\\b";
+                break;
+            }
+            case PACKING: {
+                regExReply = "(x|х)+\\d{1,3}"; //"(x|х)+\\s?+\\d{1,3}";
+                break;
+            }
+            case SODA: {
+                regExReply = "негаз| б/г|б/газ | газированная | газ |сил/газ";
+                break;
+            }
+            case TEMPERATURE_CONDITIONS: {
+                regExReply = "охлажд[а-я]{1,10}|заморож[а-я]{1,10}";
+                break;
+            }
+            case PERCENT: {
+                regExReply = "((\\d+(.|,))?\\d%)";
+                break;
+            }
+            case TARA: {
+                regExReply = "(ж/б)|с/б|c/б|(ст/б)|(стекло)|бутылка|стакан|м/у|в вак|пэт|д/пак|в/у|тетра";
+                break;
+            }
+            case SORT: {
+                regExReply = "((\\d-?)|высш)(ый)?\\s?сорт";//"в/с|\\d\\-?(ый)?s?сорт|высший сорт"
+                break;
+            }
 
-        Pattern pattern = Pattern.compile(reply);
-        Matcher matcher = pattern.matcher(stringForParse);
+
+        }
+        return regExReply;
+    }
+
+    private void findValueByRegEx(PartsOfString partOfString) {
+        final String unitFindRegEx = regExSwitcher(partOfString);
+
+        Pattern pattern = Pattern.compile(unitFindRegEx);
+        Matcher matcher = pattern.matcher(stringRest);
         while (matcher.find()) {
-            String findUnit = stringForParse.substring(matcher.start(), matcher.end());
-
+            String findUnit = stringRest.substring(matcher.start(), matcher.end());
+            this.fillInPartsOfNomenclatureString(partOfString, findUnit);
             if (testCall) System.out.println(findUnit);
         }
-        stringForParse = stringForParse.replaceAll(reply, "");
-        System.out.println(stringForParse);
-        //return reply;
+        stringRest = stringRest.replaceAll(unitFindRegEx, "");
+
+        if (testCall) System.out.println(stringForParse);
     }
+
+    private void fillInPartsOfNomenclatureString(PartsOfString thisPart, String value) {
+        boolean mapHaveThisPart = partsOfNomenclatureString.containsKey(thisPart);
+        List<String> valuesList = new ArrayList<>();
+        if (!mapHaveThisPart) {
+            valuesList.add(value);
+        } else {
+            valuesList = partsOfNomenclatureString.get(thisPart);
+            valuesList.add(value);
+        }
+        partsOfNomenclatureString.put(thisPart, valuesList);
+    }
+
 
 }
