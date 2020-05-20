@@ -4,6 +4,7 @@ public enum PartsOfString {
 
     STRING_REST,            // То, что неудалось распарсить.
     UNIT_NAME,              // Наименование единицы измерения
+    COUNT_UNIT_NAME,        // Количество единиц.
     UNIT_WITH_COUNT,        // Ед. измерение с количеством
     PACKING,                // Упаковка
 
@@ -13,6 +14,5 @@ public enum PartsOfString {
     TARA,                   // Тара
     SORT,                   // Сорт
     BRAND,
-    OTHER,
 
 }

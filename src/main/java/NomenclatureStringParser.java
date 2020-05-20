@@ -1,10 +1,7 @@
 package main.java;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,7 +16,7 @@ public class NomenclatureStringParser {
     public NomenclatureStringParser(String stringForParse, boolean testCall) {
         this.stringForParse = stringForParse;
         this.testCall = testCall;
-        stringRest = stringForParse;
+        stringRest = stringForParse.toLowerCase();
     }
 
     public NomenclatureStringParser(String stringForParse) {
@@ -34,7 +31,7 @@ public class NomenclatureStringParser {
 
         try(BufferedReader reader = new BufferedReader(new FileReader(testFilePath))) {
             String stringForParse = reader.readLine();
-            testStringParser = new NomenclatureStringParser(stringForParse, true);
+            testStringParser = new NomenclatureStringParser(stringForParse);
             reader.close();
         } catch (IOException ioException) {
             ioException.printStackTrace();
@@ -43,12 +40,20 @@ public class NomenclatureStringParser {
         if (testStringParser == null) return;
 
         ArrayList<PartsOfString> testList = new ArrayList<>();
-        testList.add(PartsOfString.SORT);
+        testList.add(PartsOfString.BRAND);
 
         NomenclatureStringParser finalTestStringParser = testStringParser;
-        testList.forEach(x -> finalTestStringParser.findValueByRegEx(x));
+        EnumSet.allOf(PartsOfString.class).forEach(x -> finalTestStringParser.findValueByRegEx(x));
         //testStringParser.findValueByRegEx(PartsOfString.UNIT_WITH_COUNT);
+        testStringParser.fillInPartsOfNomenclatureString(PartsOfString.STRING_REST, testStringParser.stringRest);
+        testStringParser.additionalProcessing();
 
+        System.out.println(testStringParser.stringForParse);
+        for (Map.Entry<PartsOfString, List<String>> part : testStringParser.partsOfNomenclatureString.entrySet()) {
+            System.out.printf("%30s : ", part.getKey().toString());
+            part.getValue().forEach(x -> System.out.printf("%50s |", x));
+            System.out.println("");
+        }
 
 
     }
@@ -81,7 +86,7 @@ public class NomenclatureStringParser {
                 break;
             }
             case SORT: {
-                regExReply = "((\\d-?)|высш)(ый)?\\s?сорт";//"в/с|\\d\\-?(ый)?s?сорт|высший сорт"
+                regExReply = "((\\d-?(ый)?)|высш+.?(ий)?)\\s?сорт|в/с";//"в/с|\\d\\-?(ый)?s?сорт|высший сорт"
                 break;
             }
 
@@ -93,6 +98,8 @@ public class NomenclatureStringParser {
     private void findValueByRegEx(PartsOfString partOfString) {
         final String unitFindRegEx = regExSwitcher(partOfString);
 
+        if (unitFindRegEx.equals("")) return;
+
         Pattern pattern = Pattern.compile(unitFindRegEx);
         Matcher matcher = pattern.matcher(stringRest);
         while (matcher.find()) {
@@ -101,8 +108,30 @@ public class NomenclatureStringParser {
             if (testCall) System.out.println(findUnit);
         }
         stringRest = stringRest.replaceAll(unitFindRegEx, "");
+    }
 
-        if (testCall) System.out.println(stringForParse);
+    private void additionalProcessing(){
+        if (partsOfNomenclatureString.containsKey(PartsOfString.UNIT_WITH_COUNT)) {
+            String regExUnit = "(г|гр|кг|мл|л|грамм)";
+            String regExCount = "\\d+(.|,)?\\d+";
+
+            for (String valueWithCount : partsOfNomenclatureString.get(PartsOfString.UNIT_WITH_COUNT)) {
+                Pattern pattern = Pattern.compile(regExUnit);
+                Matcher matcher = pattern.matcher(valueWithCount);
+                if (matcher.find()) fillInPartsOfNomenclatureString(PartsOfString.UNIT_NAME,
+                                                                    valueWithCount.substring(matcher.start(), matcher.end())
+                                                                    );
+                pattern = Pattern.compile(regExCount);
+                matcher = pattern.matcher(valueWithCount);
+                if (matcher.find()) fillInPartsOfNomenclatureString(PartsOfString.COUNT_UNIT_NAME,
+                                                                    valueWithCount.substring(matcher.start(), matcher.end())
+                                                                    );
+
+            }
+        }
+
+        // Убираем пунктуацию
+
     }
 
     private void fillInPartsOfNomenclatureString(PartsOfString thisPart, String value) {
