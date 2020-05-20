@@ -23,7 +23,7 @@ public class NomenclatureStringParser {
         this(stringForParse, false);
     }
 
-    public static void main(String[] args) throws FileNotFoundException {
+    public static void main(String[] args) {
 
         MyProjectSettings settings = MyProjectSettings.getInstance();
         String testFilePath = settings.getProjectPath() + "/SettingsDir/testFilePath";
@@ -32,7 +32,6 @@ public class NomenclatureStringParser {
         try(BufferedReader reader = new BufferedReader(new FileReader(testFilePath))) {
             String stringForParse = reader.readLine();
             testStringParser = new NomenclatureStringParser(stringForParse);
-            reader.close();
         } catch (IOException ioException) {
             ioException.printStackTrace();
         }
@@ -42,9 +41,11 @@ public class NomenclatureStringParser {
         ArrayList<PartsOfString> testList = new ArrayList<>();
         testList.add(PartsOfString.BRAND);
 
+        SQLBaseManager sqlBaseManager = new SQLBaseManager();
+
+
         NomenclatureStringParser finalTestStringParser = testStringParser;
-        EnumSet.allOf(PartsOfString.class).forEach(x -> finalTestStringParser.findValueByRegEx(x));
-        //testStringParser.findValueByRegEx(PartsOfString.UNIT_WITH_COUNT);
+        EnumSet.allOf(PartsOfString.class).forEach(finalTestStringParser::findValueByRegEx);
         testStringParser.fillInPartsOfNomenclatureString(PartsOfString.STRING_REST, testStringParser.stringRest);
         testStringParser.additionalProcessing();
 
@@ -54,7 +55,9 @@ public class NomenclatureStringParser {
             part.getValue().forEach(x -> System.out.printf("%50s |", x));
             System.out.println("");
         }
+    }
 
+    private void findBrandInNomenclatureString(SQLBaseManager sqlBaseManager){
 
     }
 

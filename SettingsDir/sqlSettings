@@ -1,1 +1,4 @@
-SRV16SQL16/rozn
+sqlIp=192.168.0.235
+sqlBase=rozn
+sqlLogin=DmitryK
+sqlPas=1qaz@WSX

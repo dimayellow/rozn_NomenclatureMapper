@@ -13,6 +13,6 @@ public enum PartsOfString {
     PERCENT,                // Проценты. Например молоко 3,2%
     TARA,                   // Тара
     SORT,                   // Сорт
-    BRAND,
+    BRAND
 
 }
