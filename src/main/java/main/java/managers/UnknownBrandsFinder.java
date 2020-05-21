@@ -17,7 +17,7 @@ public class UnknownBrandsFinder implements Runnable{
     private static UnknownBrandsFinder instance;
 
     private List<String> unfindBrands = new ArrayList<>();
-    private HashMap<String, String> brandsWithIncompleteCompliance = new HashMap();
+   // private HashMap<String, String> brandsWithIncompleteCompliance = new HashMap();
 
     private UnknownBrandsFinder() {
     }
@@ -41,8 +41,6 @@ public class UnknownBrandsFinder implements Runnable{
 
         System.out.println("Получение данных из SQL " + (endDate.getTime() - startAllDate.getTime())/(double)1000);
 
-       // allTitleForecastTovars.add("российский коньяк трехлетний \"темрюк.1556\" 0,5 апф \"фанагория\"");
-
         Date startDate = new Date();
         HashSet<String> titlesInBase = new HashSet<>();
         String findedTitle = "";
@@ -61,14 +59,14 @@ public class UnknownBrandsFinder implements Runnable{
 
         startDate = new Date();
         MyProjectSettings settings = MyProjectSettings.getInstance();
-        try (FileOutputStream outputStream = new FileOutputStream(settings.getProjectPath() + "/Files/brandsWithIncompleteCompliance.txt"))
-        {
-            for (Map.Entry<String, String> s : brandsWithIncompleteCompliance.entrySet()) {
-                outputStream.write((s.getKey() + " : " + s.getValue() + "\n").getBytes());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try (FileOutputStream outputStream = new FileOutputStream(settings.getProjectPath() + "/Files/brandsWithIncompleteCompliance.txt"))
+//        {
+//            for (Map.Entry<String, String> s : brandsWithIncompleteCompliance.entrySet()) {
+//                outputStream.write((s.getKey() + " : " + s.getValue() + "\n").getBytes());
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
         try (FileOutputStream outputStream = new FileOutputStream(settings.getProjectPath() + "/Files/unfindBrands.txt"))
         {
             for (String unfindBrand : unfindBrands) {
@@ -80,7 +78,7 @@ public class UnknownBrandsFinder implements Runnable{
         endDate = new Date();
         System.out.println("Сохранение файла " + (endDate.getTime() - startAllDate.getTime())/(double)1000);
         System.out.println("Всего уникальных наименований: " + titlesInBase.size());
-        System.out.println("С неполным совпадением: " + brandsWithIncompleteCompliance.size());
+       // System.out.println("С неполным совпадением: " + brandsWithIncompleteCompliance.size());
         System.out.println("Отсутствуют: " + unfindBrands.size());
 
     }
