@@ -10,7 +10,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="rozn_NomenclatureMapper" target="8" />
+      <module name="rozn_NomenclatureMapper" target="11" />
     </bytecodeTargetLevel>
   </component>
 </project>

@@ -1,4 +1,4 @@
-package main.java;
+package main.java.systems;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -33,25 +33,30 @@ public class MyProjectSettings {
             while ((settingsString = reader.readLine()) != null){
                 String[] settingArray = settingsString.split("=");
                 if (settingArray.length != 2) continue;
-                switch (settingArray[0]) {
-                    case ("sqlIp"):
-                        sqlIp = settingArray[1];
-                        break;
-                    case ("sqlBase"):
-                        sqlBase = settingArray[1];
-                        break;
-                        case ("sqlLogin"):
-                            sqlLogin = settingArray[1];
-                            break;
-                    case ("sqlPas"):
-                        sqlPas = settingArray[1];
-                        break;
-                }
+                fiilSqlSettings(settingArray);
             }
         } catch (IOException ioException) {
             ioException.printStackTrace();
         }
 
+    }
+
+    private void fiilSqlSettings(String[] settingArray) {
+
+        switch (settingArray[0]) {
+            case ("sqlIp"):
+                sqlIp = settingArray[1];
+                break;
+            case ("sqlBase"):
+                sqlBase = settingArray[1];
+                break;
+            case ("sqlLogin"):
+                sqlLogin = settingArray[1];
+                break;
+            case ("sqlPas"):
+                sqlPas = settingArray[1];
+                break;
+        }
     }
 
     public static MyProjectSettings getInstance() {

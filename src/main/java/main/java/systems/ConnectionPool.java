@@ -1,8 +1,7 @@
-package main.java;
+package main.java.systems;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.Vector;
 
 public class ConnectionPool {
