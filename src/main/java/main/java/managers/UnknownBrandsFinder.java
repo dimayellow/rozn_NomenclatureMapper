@@ -36,7 +36,7 @@ public class UnknownBrandsFinder implements Runnable{
         SQLBaseQuery sqlBaseQuery = SQLBaseQuery.getInstance();
         List<String> allTitleForecastTovars = sqlBaseQuery.getTitleForecastTovars();
         Brands brands = Brands.getInstance();
-        brands.fillIn();
+        brands.fillIn(true);
         Date endDate = new Date();
 
         System.out.println("Получение данных из SQL " + (endDate.getTime() - startAllDate.getTime())/(double)1000);
@@ -89,7 +89,7 @@ public class UnknownBrandsFinder implements Runnable{
 
         Pattern pattern = Pattern.compile(regEx);
         Matcher matcher = pattern.matcher(tovarName);
-        if (matcher.find()) {
+        while (matcher.find()) {
             reply = tovarName.substring(matcher.start(1), matcher.end(1)).toLowerCase().trim();
         }
         return reply;

@@ -2,7 +2,6 @@ package main.java.enums;
 
 public enum PartsOfString {
 
-    STRING_REST,            // То, что неудалось распарсить.
     UNIT_NAME,              // Наименование единицы измерения
     COUNT_UNIT_NAME,        // Количество единиц.
     UNIT_WITH_COUNT,        // Ед. измерение с количеством
@@ -13,6 +12,6 @@ public enum PartsOfString {
     PERCENT,                // Проценты. Например молоко 3,2%
     TARA,                   // Тара
     SORT,                   // Сорт
-    BRAND
+    BRAND                  // Бренд
 
 }

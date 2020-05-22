@@ -10,9 +10,7 @@ public class Brands {
     private static Brands instance;
     private List<Brand> list = new ArrayList<>();
 
-    public List<Brand> getList() {
-        return list;
-    }
+    public List<Brand> getList() {return list;}
 
     private Brands() {
     }
@@ -42,7 +40,13 @@ public class Brands {
     public void fillIn() throws SQLException {
         list.clear();
         SQLBaseQuery sqlBaseManager = SQLBaseQuery.getInstance();
-        sqlBaseManager.brandTable();
+        sqlBaseManager.getBrandTable();
+    }
+
+    public void fillIn(boolean needFillingCheck) throws SQLException {
+        if (needFillingCheck & !isFilled()) {
+            fillIn();
+        }
     }
 
 

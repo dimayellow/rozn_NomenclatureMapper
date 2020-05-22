@@ -1,11 +1,16 @@
 package main.java.managers;
 
+import main.java.sqlCollections.Units;
+import main.java.sqlObjects.Catalog;
+import main.java.sqlObjects.SQLBaseObject;
+import main.java.sqlObjects.Unit;
 import main.java.systems.MyProjectSettings;
 import main.java.enums.PartsOfString;
 import main.java.systems.SQLBaseQuery;
 import main.java.sqlCollections.Brands;
 import main.java.sqlObjects.Brand;
 
+import java.awt.image.ImageProducer;
 import java.io.*;
 import java.sql.SQLException;
 import java.util.*;
@@ -19,6 +24,8 @@ public class NomenclatureStringParser {
     private Map<PartsOfString, List<String>> partsOfNomenclatureString = new HashMap();
     boolean testCall;
     private Brand brand = null;
+    private Unit unit = null;
+    private Catalog catalog = null;
 
     public NomenclatureStringParser(String stringForParse, boolean testCall) {
         this.stringForParse = stringForParse;
@@ -26,36 +33,88 @@ public class NomenclatureStringParser {
         stringRest = stringForParse.toLowerCase();
     }
 
+    public void parseString() throws SQLException {
+        SQLBaseQuery sqlBaseManager = SQLBaseQuery.getInstance();
+
+        findBrandInNomenclatureString();
+        // тут будет извлечение каталогов
+        EnumSet.allOf(PartsOfString.class).forEach(this::findValueByRegEx);
+        if (partsOfNomenclatureString.containsKey(PartsOfString.UNIT_WITH_COUNT)) {
+            splitUpUnitAndCount();
+        }
+        findUnitInUnitString();
+
+
+    }
+
+    public void printParseInformation() {
+        System.out.println("Изначальная строка: " + stringForParse);
+        System.out.println("Остаток строки: " + stringRest);
+        System.out.println("Список найденных строк:");
+        for (Map.Entry<PartsOfString, List<String>> part : partsOfNomenclatureString.entrySet()) {
+            System.out.printf("%30s : ", part.getKey().toString());
+            part.getValue().forEach(x -> System.out.printf("%50s |", x));
+            System.out.println("");
+        }
+        System.out.println("Найденный бренд: " + getObjectString(brand));
+        System.out.println("Каталог: " + getObjectString(catalog));
+        System.out.println("Найденная ед. изм.: " + getObjectString(unit));
+    }
+
     public NomenclatureStringParser(String stringForParse) {
         this(stringForParse, false);
     }
 
+    //-----------------PARSING------------------------------------
 
-    private void findBrandInNomenclatureString(Brands brands){
+    private void findBrandInNomenclatureString() throws SQLException {
+
+        Brands brands = Brands.getInstance();
+        brands.fillIn(true);
+
         boolean brandFound = false;
-        int i = 0;
         for (Brand brand : brands.getList()) {
             for (String brandNameVariations : brand.getNames()) {
-                i++;
                 if (stringRest.contains(brandNameVariations)) {
                     this.brand = brand;
                     brandFound = true;
                     fillInPartsOfNomenclatureString(PartsOfString.BRAND, brandNameVariations);
-                    stringRest = stringRest.replaceAll(brandNameVariations, "");
+                    delValueFromStringRest(brandNameVariations);
 
                     break;
                 }
             }
             if (brandFound) break;
         }
-        System.out.println(i);
     }
+
+    private void findUnitInUnitString() throws SQLException {
+        if (!partsOfNomenclatureString.containsKey(PartsOfString.UNIT_NAME)) return;
+        String unitName = partsOfNomenclatureString.get(PartsOfString.UNIT_NAME).get(0);
+        Units units = Units.getInstance();
+        units.fillIn(true);
+
+        boolean unitFound = false;
+        for (Unit unit : units.getList()) {
+            for (String unitNameVariations : unit.getNames()) {
+                if (unitName.equals(unitNameVariations)) {
+                    this.unit = unit;
+                    unitFound = true;
+                    break;
+                }
+            }
+            if (unitFound) break;
+        }
+    }
+
+
+    private String getUnitsEnum() { return "(г|гр|кг|мл|л|грамм)";}
 
     private String regExSwitcher(PartsOfString partOfString) {
         String regExReply = "";
         switch (partOfString) {
             case UNIT_WITH_COUNT : {
-                regExReply = "(\\d+(.|,))?\\d+\\s?+(г|гр|кг|мл|л|грамм)\\b";
+                regExReply = "(\\d+(.|,))?\\d+\\s?" + getUnitsEnum() + "\\b";
                 break;
             }
             case PACKING: {
@@ -98,18 +157,11 @@ public class NomenclatureStringParser {
             this.fillInPartsOfNomenclatureString(partOfString, findUnit);
             if (testCall) System.out.println(findUnit);
         }
-        stringRest = stringRest.replaceAll(unitFindRegEx, "");
-    }
-
-    private void additionalProcessing(){
-        if (partsOfNomenclatureString.containsKey(PartsOfString.UNIT_WITH_COUNT)) {
-            splitUpUnitAndCount();
-        }
-
+        delValueFromStringRest(unitFindRegEx);
     }
 
     private void splitUpUnitAndCount() {
-        String regExUnit = "(г|гр|кг|мл|л|грамм)";
+        String regExUnit = getUnitsEnum();
         String regExCount = "\\d+(.|,)?\\d+";
 
         for (String valueWithCount : partsOfNomenclatureString.get(PartsOfString.UNIT_WITH_COUNT)) {
@@ -138,9 +190,18 @@ public class NomenclatureStringParser {
         partsOfNomenclatureString.put(thisPart, valuesList);
     }
 
+    private void delValueFromStringRest(String value) {
+        stringRest = stringRest.replaceAll(value, "");
+    }
+
     //--------------------------------------
 
-    public static void main(String[] args) {
+    public String getObjectString(SQLBaseObject object) {
+        if (object == null) return "Не найден";
+        return object.toString();
+    }
+
+    public static void main(String[] args) throws SQLException {
 
         MyProjectSettings settings = MyProjectSettings.getInstance();
         String testFilePath = settings.getProjectPath() + "/SettingsDir/testFilePath";
@@ -155,41 +216,8 @@ public class NomenclatureStringParser {
 
         if (testStringParser == null) return;
 
-        ArrayList<PartsOfString> testList = new ArrayList<>();
-        testList.add(PartsOfString.BRAND);
-
-        Date startBrand = new Date();
-
-        SQLBaseQuery sqlBaseManager = SQLBaseQuery.getInstance();
-        Brands brands = Brands.getInstance();
-        try {
-            sqlBaseManager.brandTable();
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-
-        Date endBrand = new Date();
-
-        System.out.println("Заполнение Brands : " + (endBrand.getTime() - startBrand.getTime())/(double)1000);
-        NomenclatureStringParser finalTestStringParser = testStringParser;
-
-        Date startBrandFind = new Date();
-        testStringParser.findBrandInNomenclatureString(brands);
-        Date endBrandFind = new Date();
-
-        System.out.println("Поиск Brands : " + (endBrandFind.getTime() - startBrandFind.getTime())/(double)1000);
-
-        EnumSet.allOf(PartsOfString.class).forEach(finalTestStringParser::findValueByRegEx);
-        testStringParser.fillInPartsOfNomenclatureString(PartsOfString.STRING_REST, testStringParser.stringRest);
-        testStringParser.additionalProcessing();
-
-        System.out.println(testStringParser.stringForParse);
-
-        for (Map.Entry<PartsOfString, List<String>> part : testStringParser.partsOfNomenclatureString.entrySet()) {
-            System.out.printf("%30s : ", part.getKey().toString());
-            part.getValue().forEach(x -> System.out.printf("%50s |", x));
-            System.out.println("");
-        }
+        testStringParser.parseString();
+        testStringParser.printParseInformation();
     }
 
 }

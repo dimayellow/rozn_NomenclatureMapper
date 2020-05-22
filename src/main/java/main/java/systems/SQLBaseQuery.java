@@ -2,7 +2,11 @@ package main.java.systems;
 
 import main.java.TestPanel;
 import main.java.sqlCollections.Brands;
+import main.java.sqlCollections.Catalogs;
+import main.java.sqlCollections.Units;
 import main.java.sqlObjects.Brand;
+import main.java.sqlObjects.Catalog;
+import main.java.sqlObjects.Unit;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -33,12 +37,10 @@ public class SQLBaseQuery {
 
     //------------------Работа с таблицей брэндов--------------------------
 
-    public void brandTable() throws SQLException {
+    public void getBrandTable() throws SQLException {
 
         Brands brands = Brands.getInstance();
-
         ResultSet executeQuery = createResultSet(brandSqlQuery());
-
         while (executeQuery.next()) {
             brands.add(createBrandForQuerryString(executeQuery));
         }
@@ -79,7 +81,6 @@ public class SQLBaseQuery {
         return titles;
     }
 
-
     private String titleSqlQuery() {
         return "select\n" +
                 "ForecastTovars.Title\n" +
@@ -88,10 +89,66 @@ public class SQLBaseQuery {
     }
 
     //---------------------------------------------------------------------
+    //---------------------------UNITS-------------------------------------
 
+    public void getUnitsTable() throws SQLException {
 
+        Units units = Units.getInstance();
+        ResultSet executeQuery = createResultSet(unitsSqlQuery());
+        while (executeQuery.next()) {
+            units.add(createUnitForQuerryString(executeQuery));
+        }
+    }
+
+    private Unit createUnitForQuerryString(ResultSet executeQuery) throws SQLException {
+        Unit unit = new Unit(executeQuery.getString("id"));
+        unit.addNamesFromString(executeQuery.getString("syns"));
+        unit.sort();
+
+        return unit;
+    }
+
+    private String unitsSqlQuery() {
+        return "select \n" +
+                "units.Synonyms as syns,\n" +
+                "units.UnitId as id\n" +
+                "from dbo.Units as units\n" +
+                "where units.synonyms is not null";
+    }
+
+    //---------------------------------------------------------------------
+
+    //--------------------------CATALOGS-----------------------------------
+
+    public void getCatalogsTable() throws SQLException {
+        Catalogs catalogs = Catalogs.getInstance();
+        ResultSet executeQuery = createResultSet(catalogsSqlQuery());
+        while (executeQuery.next()) {
+            catalogs.add(createCatalogForQuerryString(executeQuery));
+        }
+    }
+    
+    private Catalog createCatalogForQuerryString(ResultSet executeQuery) throws SQLException {
+        Catalog catalog = new Catalog(executeQuery.getString("id"));
+        catalog.addName("title");
+        catalog.addNamesFromString(executeQuery.getString("syns"));
+        catalog.sort();
+
+        return catalog;
+    }
+    
+    private String catalogsSqlQuery() {
+        return "select top 100\n" +
+                "cat.CatalogId as id,\n" +
+                "cat.Title as title,\n" +
+                "ISNULL(cat.Synonyms, '') as syn\n" +
+                "from dbo.Catalogs as cat";
+    }
+
+    //---------------------------------------------------------------------
     public static void main(String[] args) {
     }
+
 
     
 }
