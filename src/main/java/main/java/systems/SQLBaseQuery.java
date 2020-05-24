@@ -1,12 +1,7 @@
 package main.java.systems;
 
-import main.java.TestPanel;
-import main.java.sqlCollections.Brands;
-import main.java.sqlCollections.Catalogs;
-import main.java.sqlCollections.Units;
-import main.java.sqlObjects.Brand;
-import main.java.sqlObjects.Catalog;
-import main.java.sqlObjects.Unit;
+import main.java.sqlCollections.*;
+import main.java.sqlObjects.*;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -16,7 +11,7 @@ public class SQLBaseQuery {
 
     private static SQLBaseQuery instance;
 
-    private ConnectionPool pool;
+    private final ConnectionPool pool;
 
     private SQLBaseQuery() {
         this.pool = new ConnectionPool(1);
@@ -42,7 +37,7 @@ public class SQLBaseQuery {
         Brands brands = Brands.getInstance();
         ResultSet executeQuery = createResultSet(brandSqlQuery());
         while (executeQuery.next()) {
-            brands.add(createBrandForQuerryString(executeQuery));
+            brands.add(createBrandForQueryString(executeQuery));
         }
     }
 
@@ -57,7 +52,7 @@ public class SQLBaseQuery {
                 "Order by Brand.[Go] desc";
     }
 
-    private Brand createBrandForQuerryString(ResultSet executeQuery) throws SQLException {
+    private Brand createBrandForQueryString(ResultSet executeQuery) throws SQLException {
         Brand brand = new Brand(executeQuery.getString("id"));
         brand.addName(executeQuery.getString("rus"));
         brand.addName(executeQuery.getString("eng"));
@@ -146,9 +141,5 @@ public class SQLBaseQuery {
     }
 
     //---------------------------------------------------------------------
-    public static void main(String[] args) {
-    }
 
-
-    
 }

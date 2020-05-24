@@ -1,7 +1,6 @@
 package main.java.sqlCollections;
 
 import main.java.sqlObjects.Catalog;
-import main.java.sqlObjects.Unit;
 import main.java.systems.SQLBaseQuery;
 
 import java.sql.SQLException;

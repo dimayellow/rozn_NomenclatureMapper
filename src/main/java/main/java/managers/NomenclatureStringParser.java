@@ -1,31 +1,37 @@
 package main.java.managers;
 
+import main.java.enums.PartsOfString;
+import main.java.sqlCollections.Brands;
+import main.java.sqlCollections.Catalogs;
 import main.java.sqlCollections.Units;
+import main.java.sqlObjects.Brand;
 import main.java.sqlObjects.Catalog;
 import main.java.sqlObjects.SQLBaseObject;
 import main.java.sqlObjects.Unit;
 import main.java.systems.MyProjectSettings;
-import main.java.enums.PartsOfString;
-import main.java.systems.SQLBaseQuery;
-import main.java.sqlCollections.Brands;
-import main.java.sqlObjects.Brand;
 
-import java.awt.image.ImageProducer;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class NomenclatureStringParser {
 
-    private String stringForParse;
+    private final String stringForParse;
     private String stringRest;
-    private Map<PartsOfString, List<String>> partsOfNomenclatureString = new HashMap();
-    boolean testCall;
+    private HashMap<PartsOfString, ArrayList<String>> partsOfNomenclatureString = new HashMap<>();
+    final boolean testCall;
     private Brand brand = null;
     private Unit unit = null;
     private Catalog catalog = null;
+
+    private final String unitsRegExp = "(г|гр|кг|мл|л|грамм)";
 
     public NomenclatureStringParser(String stringForParse, boolean testCall) {
         this.stringForParse = stringForParse;
@@ -34,16 +40,15 @@ public class NomenclatureStringParser {
     }
 
     public void parseString() throws SQLException {
-        SQLBaseQuery sqlBaseManager = SQLBaseQuery.getInstance();
 
         findBrandInNomenclatureString();
-        // тут будет извлечение каталогов
+        findCatalofInNomenclatureString();
+
         EnumSet.allOf(PartsOfString.class).forEach(this::findValueByRegEx);
         if (partsOfNomenclatureString.containsKey(PartsOfString.UNIT_WITH_COUNT)) {
             splitUpUnitAndCount();
         }
         findUnitInUnitString();
-
 
     }
 
@@ -51,10 +56,10 @@ public class NomenclatureStringParser {
         System.out.println("Изначальная строка: " + stringForParse);
         System.out.println("Остаток строки: " + stringRest);
         System.out.println("Список найденных строк:");
-        for (Map.Entry<PartsOfString, List<String>> part : partsOfNomenclatureString.entrySet()) {
+        for (Map.Entry<PartsOfString, ArrayList<String>> part : partsOfNomenclatureString.entrySet()) {
             System.out.printf("%30s : ", part.getKey().toString());
             part.getValue().forEach(x -> System.out.printf("%50s |", x));
-            System.out.println("");
+            System.out.println();
         }
         System.out.println("Найденный бренд: " + getObjectString(brand));
         System.out.println("Каталог: " + getObjectString(catalog));
@@ -65,8 +70,10 @@ public class NomenclatureStringParser {
         this(stringForParse, false);
     }
 
-    //-----------------PARSING------------------------------------
 
+    /* Поиск бренда в названии номенклатуры.
+   * поиск выполняется по полному вхождению названия бренда в строку
+   */
     private void findBrandInNomenclatureString() throws SQLException {
 
         Brands brands = Brands.getInstance();
@@ -88,6 +95,9 @@ public class NomenclatureStringParser {
         }
     }
 
+    /* Поиск единицы измерения в распарсеной строке.
+    * Ищется по полному соответствию среди уже найденной единицы измерения.
+     */
     private void findUnitInUnitString() throws SQLException {
         if (!partsOfNomenclatureString.containsKey(PartsOfString.UNIT_NAME)) return;
         String unitName = partsOfNomenclatureString.get(PartsOfString.UNIT_NAME).get(0);
@@ -107,14 +117,32 @@ public class NomenclatureStringParser {
         }
     }
 
+    private void findCatalofInNomenclatureString() throws SQLException {
+        Catalogs catalogs = Catalogs.getInstance();
+        catalogs.fillIn(true);
 
-    private String getUnitsEnum() { return "(г|гр|кг|мл|л|грамм)";}
+        boolean catalogFound = false;
+        for (Catalog catalog : catalogs.getList()) {
+            for (String catalogNameVariation : catalog.getNames()) {
+                if (stringRest.contains(catalogNameVariation)) {
+                    this.catalog = catalog;
+                    catalogFound = true;
+                    delValueFromStringRest(catalogNameVariation);
 
+                    break;
+                }
+            }
+            if (catalogFound) break;
+        }
+    }
+
+    /* Список регулярных выражений, в зависимости от параметра.
+     */
     private String regExSwitcher(PartsOfString partOfString) {
         String regExReply = "";
         switch (partOfString) {
             case UNIT_WITH_COUNT : {
-                regExReply = "(\\d+(.|,))?\\d+\\s?" + getUnitsEnum() + "\\b";
+                regExReply = "(\\d+(.|,))?\\d+\\s?" + unitsRegExp + "\\b";
                 break;
             }
             case PACKING: {
@@ -145,6 +173,9 @@ public class NomenclatureStringParser {
         return regExReply;
     }
 
+    /* Поиск в строке значения по регулярному выражению.
+    *  После этого найденное значение удаляется из строки.
+     */
     private void findValueByRegEx(PartsOfString partOfString) {
         final String unitFindRegEx = regExSwitcher(partOfString);
 
@@ -160,12 +191,14 @@ public class NomenclatureStringParser {
         delValueFromStringRest(unitFindRegEx);
     }
 
+    /* Разделяет уже найденное объединенное значение единицы и количества.
+     */
     private void splitUpUnitAndCount() {
-        String regExUnit = getUnitsEnum();
+
         String regExCount = "\\d+(.|,)?\\d+";
 
         for (String valueWithCount : partsOfNomenclatureString.get(PartsOfString.UNIT_WITH_COUNT)) {
-            Pattern pattern = Pattern.compile(regExUnit);
+            Pattern pattern = Pattern.compile(unitsRegExp);
             Matcher matcher = pattern.matcher(valueWithCount);
             if (matcher.find()) fillInPartsOfNomenclatureString(PartsOfString.UNIT_NAME,
                     valueWithCount.substring(matcher.start(), matcher.end())
@@ -179,22 +212,18 @@ public class NomenclatureStringParser {
     }
 
     private void fillInPartsOfNomenclatureString(PartsOfString thisPart, String value) {
-        boolean mapHaveThisPart = partsOfNomenclatureString.containsKey(thisPart);
-        List<String> valuesList = new ArrayList<>();
-        if (!mapHaveThisPart) {
-            valuesList.add(value);
-        } else {
+
+        ArrayList<String> valuesList = new ArrayList<>();
+        if (partsOfNomenclatureString.containsKey(thisPart)) {
             valuesList = partsOfNomenclatureString.get(thisPart);
-            valuesList.add(value);
         }
+        valuesList.add(value);
         partsOfNomenclatureString.put(thisPart, valuesList);
     }
 
     private void delValueFromStringRest(String value) {
         stringRest = stringRest.replaceAll(value, "");
     }
-
-    //--------------------------------------
 
     public String getObjectString(SQLBaseObject object) {
         if (object == null) return "Не найден";
