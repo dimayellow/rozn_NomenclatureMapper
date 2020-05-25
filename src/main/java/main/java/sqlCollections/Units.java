@@ -5,11 +5,12 @@ import main.java.systems.SQLBaseQuery;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class Units {
     private static Units instance;
-    private List<Unit> list = new ArrayList<>();
+    private List<Unit> list = new LinkedList<>();
 
     public List<Unit> getList() {return list;}
 

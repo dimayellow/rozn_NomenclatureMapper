@@ -6,7 +6,6 @@ import main.java.systems.MyProjectSettings;
 import main.java.systems.SQLBaseQuery;
 
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;

@@ -8,7 +8,7 @@ import java.util.*;
 
 public class Brands {
     private static Brands instance;
-    private List<Brand> list = new ArrayList<>();
+    private List<Brand> list = new LinkedList<>();
 
     public List<Brand> getList() {return list;}
 

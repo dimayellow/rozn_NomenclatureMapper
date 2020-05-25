@@ -35,7 +35,7 @@ public abstract class SQLBaseObject {
 
     @Override
     public String toString() {
-        return "Brand{" +
+        return "{" +
                 "id=" + id +
                 ", names=" + names +
                 '}';

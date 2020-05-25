@@ -24,14 +24,14 @@ import java.util.regex.Pattern;
 public class NomenclatureStringParser {
 
     private final String stringForParse;
+    private final String unitsRegExp = "(г|гр|кг|мл|л|грамм)";
+
     private String stringRest;
-    private HashMap<PartsOfString, ArrayList<String>> partsOfNomenclatureString = new HashMap<>();
+    private HashMap<PartsOfString, String> partsOfNomenclatureString = new HashMap<>();
     final boolean testCall;
     private Brand brand = null;
     private Unit unit = null;
     private Catalog catalog = null;
-
-    private final String unitsRegExp = "(г|гр|кг|мл|л|грамм)";
 
     public NomenclatureStringParser(String stringForParse, boolean testCall) {
         this.stringForParse = stringForParse;
@@ -56,9 +56,9 @@ public class NomenclatureStringParser {
         System.out.println("Изначальная строка: " + stringForParse);
         System.out.println("Остаток строки: " + stringRest);
         System.out.println("Список найденных строк:");
-        for (Map.Entry<PartsOfString, ArrayList<String>> part : partsOfNomenclatureString.entrySet()) {
+        for (Map.Entry<PartsOfString, String> part : partsOfNomenclatureString.entrySet()) {
             System.out.printf("%30s : ", part.getKey().toString());
-            part.getValue().forEach(x -> System.out.printf("%50s |", x));
+            System.out.printf("%50s |", part.getValue());
             System.out.println();
         }
         System.out.println("Найденный бренд: " + getObjectString(brand));
@@ -100,7 +100,7 @@ public class NomenclatureStringParser {
      */
     private void findUnitInUnitString() throws SQLException {
         if (!partsOfNomenclatureString.containsKey(PartsOfString.UNIT_NAME)) return;
-        String unitName = partsOfNomenclatureString.get(PartsOfString.UNIT_NAME).get(0);
+        String unitName = partsOfNomenclatureString.get(PartsOfString.UNIT_NAME);
         Units units = Units.getInstance();
         units.fillIn(true);
 
@@ -195,17 +195,18 @@ public class NomenclatureStringParser {
      */
     private void splitUpUnitAndCount() {
 
-        String regExCount = "\\d+(.|,)?\\d+";
+        String thisRegEx = "";
+        String valueWithCount = partsOfNomenclatureString.get(PartsOfString.UNIT_WITH_COUNT);
 
-        for (String valueWithCount : partsOfNomenclatureString.get(PartsOfString.UNIT_WITH_COUNT)) {
-            Pattern pattern = Pattern.compile(unitsRegExp);
+        PartsOfString[] parts = {PartsOfString.UNIT_NAME, PartsOfString.UNIT_WITH_COUNT};
+
+        for (PartsOfString part : parts) {
+
+            thisRegEx = part == PartsOfString.UNIT_NAME ? unitsRegExp : "\\d+(.|,)?\\d+";
+
+            Pattern pattern = Pattern.compile(thisRegEx);
             Matcher matcher = pattern.matcher(valueWithCount);
-            if (matcher.find()) fillInPartsOfNomenclatureString(PartsOfString.UNIT_NAME,
-                    valueWithCount.substring(matcher.start(), matcher.end())
-            );
-            pattern = Pattern.compile(regExCount);
-            matcher = pattern.matcher(valueWithCount);
-            if (matcher.find()) fillInPartsOfNomenclatureString(PartsOfString.COUNT_UNIT_NAME,
+            if (matcher.find()) fillInPartsOfNomenclatureString(part,
                     valueWithCount.substring(matcher.start(), matcher.end())
             );
         }
@@ -213,12 +214,10 @@ public class NomenclatureStringParser {
 
     private void fillInPartsOfNomenclatureString(PartsOfString thisPart, String value) {
 
-        ArrayList<String> valuesList = new ArrayList<>();
         if (partsOfNomenclatureString.containsKey(thisPart)) {
-            valuesList = partsOfNomenclatureString.get(thisPart);
+            String valuesList = partsOfNomenclatureString.get(thisPart);
+            partsOfNomenclatureString.put(thisPart, valuesList);
         }
-        valuesList.add(value);
-        partsOfNomenclatureString.put(thisPart, valuesList);
     }
 
     private void delValueFromStringRest(String value) {

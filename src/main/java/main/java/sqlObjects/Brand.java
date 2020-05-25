@@ -18,6 +18,11 @@ public class Brand extends SQLBaseObject{
     }
 
     @Override
+    public String toString() {
+        return "Brand" + super.toString();
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hash(id, names);
     }

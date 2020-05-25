@@ -11,10 +11,14 @@ public class Catalog extends SQLBaseObject {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Unit)) return false;
+        if (!(o instanceof Catalog)) return false;
         Catalog unit = (Catalog) o;
         return id == unit.id &&
                 Objects.equals(names, unit.names);
     }
 
+    @Override
+    public String toString() {
+        return "Catalog" + super.toString();
+    }
 }

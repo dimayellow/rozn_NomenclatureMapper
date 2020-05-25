@@ -5,6 +5,7 @@ import main.java.sqlObjects.*;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class SQLBaseQuery {
@@ -62,7 +63,6 @@ public class SQLBaseQuery {
         return brand;
     }
 
-    //---------------------------------------------------------------------
     //---------------------ВСЕ НАЗВАНИЯНОМЕНКЛАТУР-------------------------
 
     public List<String> getTitleForecastTovars() throws SQLException {
@@ -83,7 +83,6 @@ public class SQLBaseQuery {
                 "where ForecastTovars.Title is not null";
     }
 
-    //---------------------------------------------------------------------
     //---------------------------UNITS-------------------------------------
 
     public void getUnitsTable() throws SQLException {
@@ -111,8 +110,6 @@ public class SQLBaseQuery {
                 "where units.synonyms is not null";
     }
 
-    //---------------------------------------------------------------------
-
     //--------------------------CATALOGS-----------------------------------
 
     public void getCatalogsTable() throws SQLException {
@@ -125,7 +122,7 @@ public class SQLBaseQuery {
     
     private Catalog createCatalogForQuerryString(ResultSet executeQuery) throws SQLException {
         Catalog catalog = new Catalog(executeQuery.getString("id"));
-        catalog.addName("title");
+        catalog.addName(executeQuery.getString("title"));
         catalog.addNamesFromString(executeQuery.getString("syns"));
         catalog.sort();
 
@@ -133,13 +130,38 @@ public class SQLBaseQuery {
     }
     
     private String catalogsSqlQuery() {
-        return "select top 100\n" +
+        return "select\n" +
                 "cat.CatalogId as id,\n" +
                 "cat.Title as title,\n" +
-                "ISNULL(cat.Synonyms, '') as syn\n" +
+                "ISNULL(cat.Synonyms, '') as syns\n" +
                 "from dbo.Catalogs as cat";
     }
 
-    //---------------------------------------------------------------------
+    //------------------------TITLES FROM ID-------------------------------
+
+    /* Возвращает список всех вариаций названий номенклатур из таблицы Forecasts
+    *  по заданному id
+     */
+    public LinkedList<String> getTitlesFromId(String id) throws SQLException {
+        LinkedList<String> list = new LinkedList<>();
+
+        ResultSet executeQuery = createResultSet(titlesFromIdQuery(id));
+        while (executeQuery.next()) {
+            list.add(executeQuery.getString("fTitle"));
+        }
+        return list;
+    }
+
+    private String titlesFromIdQuery(String id) {
+        return "select\n" +
+                //"tovars.TovarId as id,\n" +
+                //"tovars.Title,\n" +
+                "fTovars.Title as fTitle\n" +
+                " from dbo.Tovars as tovars\n" +
+                " left join dbo.ForecastTovars as fTovars on tovars.TovarId = fTovars.TovarId \n" +
+                " where tovars.TovarId = " + id + "\n" +
+                //" GROUP By tovars.TovarId, tovars.Title, fTovars.Title\n"
+                " GROUP By fTovars.Title";
+    }
 
 }

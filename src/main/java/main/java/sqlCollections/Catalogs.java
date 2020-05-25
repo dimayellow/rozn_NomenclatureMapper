@@ -5,11 +5,12 @@ import main.java.systems.SQLBaseQuery;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class Catalogs {
     private static Catalogs instance;
-    private List<Catalog> list = new ArrayList<>();
+    private List<Catalog> list = new LinkedList<>();
 
     public List<Catalog> getList() {return list;}
 
@@ -39,7 +40,7 @@ public class Catalogs {
     public void fillIn() throws SQLException {
         list.clear();
         SQLBaseQuery sqlBaseManager = SQLBaseQuery.getInstance();
-        sqlBaseManager.getUnitsTable();
+        sqlBaseManager.getCatalogsTable();
     }
 
     public void fillIn(boolean needFillingCheck) throws SQLException {

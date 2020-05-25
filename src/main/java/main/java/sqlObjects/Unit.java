@@ -23,4 +23,10 @@ public class Unit extends SQLBaseObject{
     public int hashCode() {
         return Objects.hash(id, names);
     }
+
+    @Override
+    public String toString() {
+        return "Unit" + super.toString();
+    }
+
 }
