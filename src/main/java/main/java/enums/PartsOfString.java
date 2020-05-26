@@ -11,7 +11,8 @@ public enum PartsOfString {
     TEMPERATURE_CONDITIONS, // Температурные условия
     PERCENT,                // Проценты. Например молоко 3,2%
     TARA,                   // Тара
-    SORT,                   // Сорт
-    BRAND                  // Бренд
+    GRADE,                   // Сорт
+    BRAND,                  // Бренд
+    CATALOG
 
 }

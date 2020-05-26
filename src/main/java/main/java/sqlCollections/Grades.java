@@ -1,19 +1,20 @@
 package main.java.sqlCollections;
 
-import main.java.sqlObjects.Brand;
+import main.java.sqlObjects.Grade;
+import main.java.sqlObjects.Soda;
 import main.java.systems.SQLBaseQuery;
 
 import java.sql.SQLException;
 
-public class Brands extends SQLCollections<Brand>{
-    private static Brands instance;
+public class Grades extends SQLCollections<Grade>{
+    private static Grades instance;
 
-    private Brands() {
+    private Grades() {
     }
 
-    public static Brands getInstance() {
+    public static Grades getInstance() {
         if (instance == null) {
-            instance = new Brands();
+            instance = new Grades();
         }
         return instance;
     }
@@ -21,7 +22,6 @@ public class Brands extends SQLCollections<Brand>{
     public void fillIn() throws SQLException {
         super.fillIn();
         SQLBaseQuery sqlBaseManager = SQLBaseQuery.getInstance();
-        sqlBaseManager.fillBrandsFromSQL();
+        sqlBaseManager.fillGradesFromSQL();
     }
-
 }

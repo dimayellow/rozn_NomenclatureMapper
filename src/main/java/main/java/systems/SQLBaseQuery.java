@@ -1,12 +1,10 @@
 package main.java.systems;
 
 import main.java.sqlCollections.*;
-import main.java.sqlObjects.*;
+import main.java.systems.sqlQueries.*;
 
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 
 public class SQLBaseQuery {
 
@@ -25,123 +23,76 @@ public class SQLBaseQuery {
         return instance;
     }
 
+    // Общие методы
+
     private ResultSet createResultSet(String request) throws SQLException {
         Connection connection = pool.retrieve();
         Statement statement = connection.createStatement();
         return statement.executeQuery(request);
     }
 
-    //------------------Работа с таблицей брэндов--------------------------
-
-    public void getBrandTable() throws SQLException {
-
-        Brands brands = Brands.getInstance();
-        ResultSet executeQuery = createResultSet(brandSqlQuery());
-        while (executeQuery.next()) {
-            brands.add(createBrandForQueryString(executeQuery));
-        }
-    }
-
-    private String brandSqlQuery() {
-        return "Select\n" +
-                "isnull(Brand.title, '') as rus,\n" +
-                "isnull(Brand.Title_eng, '') as eng,\n" +
-                "Brand.BrandId as id,\n" +
-                "isnull(Brand.Synonyms, '') as syns\n" +
-                "from dbo.Brands as Brand\n" +
-                "Where Brand.Stop = 0\n" +
-                "Order by Brand.[Go] desc";
-    }
-
-    private Brand createBrandForQueryString(ResultSet executeQuery) throws SQLException {
-        Brand brand = new Brand(executeQuery.getString("id"));
-        brand.addName(executeQuery.getString("rus"));
-        brand.addName(executeQuery.getString("eng"));
-        brand.addNamesFromString(executeQuery.getString("syns"));
-        brand.sort();
-
-        return brand;
-    }
-
-    //---------------------ВСЕ НАЗВАНИЯНОМЕНКЛАТУР-------------------------
-
-    public List<String> getTitleForecastTovars() throws SQLException {
-        List<String> titles = new ArrayList<>();
-        ResultSet executeQuery = createResultSet(titleSqlQuery());
+    public LinkedList<String> getListFromSQL(SQLQueries sqlQueries) throws SQLException {
+        LinkedList<String> titles = new LinkedList<>();
+        ResultSet executeQuery = createResultSet(sqlQueries.getQuery());
 
         while (executeQuery.next()) {
-            titles.add(executeQuery.getString("Title").toLowerCase());
+            titles.add((String) sqlQueries.getElement(executeQuery));
         }
 
         return titles;
     }
 
-    private String titleSqlQuery() {
-        return "select\n" +
-                "ForecastTovars.Title\n" +
-                "from dbo.ForecastTovars as ForecastTovars\n" +
-                "where ForecastTovars.Title is not null";
-    }
-
-    //---------------------------UNITS-------------------------------------
-
-    public void getUnitsTable() throws SQLException {
-
-        Units units = Units.getInstance();
-        ResultSet executeQuery = createResultSet(unitsSqlQuery());
+    public void fillObjectsFromSQL(SQLCollections instance, SQLQueries sqlQueries) throws SQLException {
+        ResultSet executeQuery = createResultSet(sqlQueries.getQuery());
         while (executeQuery.next()) {
-            units.add(createUnitForQuerryString(executeQuery));
+            instance.add(sqlQueries.getElement(executeQuery));
         }
     }
 
-    private Unit createUnitForQuerryString(ResultSet executeQuery) throws SQLException {
-        Unit unit = new Unit(executeQuery.getString("id"));
-        unit.addNamesFromString(executeQuery.getString("syns"));
-        unit.sort();
+    // Методы по объектам
 
-        return unit;
+    public void fillBrandsFromSQL() throws SQLException {
+
+        Brands brands = Brands.getInstance();
+        fillObjectsFromSQL(Brands.getInstance(), new BrandQuery());
     }
 
-    private String unitsSqlQuery() {
-        return "select \n" +
-                "units.Synonyms as syns,\n" +
-                "units.UnitId as id\n" +
-                "from dbo.Units as units\n" +
-                "where units.synonyms is not null";
+    public void fillUnitsFromSQL() throws SQLException {
+        fillObjectsFromSQL(Units.getInstance(), new UnitQuery());
     }
 
-    //--------------------------CATALOGS-----------------------------------
-
-    public void getCatalogsTable() throws SQLException {
-        Catalogs catalogs = Catalogs.getInstance();
-        ResultSet executeQuery = createResultSet(catalogsSqlQuery());
-        while (executeQuery.next()) {
-            catalogs.add(createCatalogForQuerryString(executeQuery));
-        }
-    }
-    
-    private Catalog createCatalogForQuerryString(ResultSet executeQuery) throws SQLException {
-        Catalog catalog = new Catalog(executeQuery.getString("id"));
-        catalog.addName(executeQuery.getString("title"));
-        catalog.addNamesFromString(executeQuery.getString("syns"));
-        catalog.sort();
-
-        return catalog;
-    }
-    
-    private String catalogsSqlQuery() {
-        return "select\n" +
-                "cat.CatalogId as id,\n" +
-                "cat.Title as title,\n" +
-                "ISNULL(cat.Synonyms, '') as syns\n" +
-                "from dbo.Catalogs as cat";
+    public void fillCatalogsFromSQL() throws SQLException {
+        fillObjectsFromSQL(Catalogs.getInstance(), new CatalogQuery());
     }
 
-    //------------------------TITLES FROM ID-------------------------------
+    public void fillSodaFromSQL() throws SQLException {
 
-    /* Возвращает список всех вариаций названий номенклатур из таблицы Forecasts
-    *  по заданному id
-     */
+        fillObjectsFromSQL(Sodas.getInstance(), new SodaQuery());
+
+    }
+
+    public void fillContainersFromSQL() throws SQLException {
+
+        fillObjectsFromSQL(Containers.getInstance(), new ContainerQuery());
+
+    }
+
+    public void fillGradesFromSQL() throws SQLException {
+
+        fillObjectsFromSQL(Grades.getInstance(), new GradeQuery());
+
+    }
+
+    public void fillTemperaturesFromSQL() throws SQLException {
+
+        fillObjectsFromSQL(Temperatures.getInstance(), new TemperatureQuery());
+
+    }
+
+    public LinkedList<String> getTitleForecastTovars() throws SQLException {
+        return getListFromSQL(new ForecastTovarsTitleQuery());
+    }
+
     public LinkedList<String> getTitlesFromId(String id) throws SQLException {
         LinkedList<String> list = new LinkedList<>();
 

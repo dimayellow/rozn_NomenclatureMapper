@@ -1,19 +1,19 @@
 package main.java.sqlCollections;
 
-import main.java.sqlObjects.Brand;
+import main.java.sqlObjects.Container;
 import main.java.systems.SQLBaseQuery;
 
 import java.sql.SQLException;
 
-public class Brands extends SQLCollections<Brand>{
-    private static Brands instance;
+public class Containers extends SQLCollections<Container> {
+    private static Containers instance;
 
-    private Brands() {
+    private Containers() {
     }
 
-    public static Brands getInstance() {
+    public static Containers getInstance() {
         if (instance == null) {
-            instance = new Brands();
+            instance = new Containers();
         }
         return instance;
     }
@@ -21,7 +21,6 @@ public class Brands extends SQLCollections<Brand>{
     public void fillIn() throws SQLException {
         super.fillIn();
         SQLBaseQuery sqlBaseManager = SQLBaseQuery.getInstance();
-        sqlBaseManager.fillBrandsFromSQL();
+        sqlBaseManager.fillContainersFromSQL();
     }
-
 }
