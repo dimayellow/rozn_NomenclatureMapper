@@ -36,6 +36,7 @@ public class NomenclatureStringParser {
     private SQLBaseObject temperature = null;
     private SQLBaseObject Grade = null;
 
+    private int countUnitName = 0;
 
     public NomenclatureStringParser(String stringForParse) {
         this.stringForParse = stringForParse;
@@ -97,6 +98,9 @@ public class NomenclatureStringParser {
         findSQLObjectInMap(Containers.getInstance(), PartsOfString.TARA);
         findSQLObjectInMap(Grades.getInstance(), PartsOfString.GRADE);
         findSQLObjectInMap(Temperatures.getInstance(), PartsOfString.TEMPERATURE_CONDITIONS);
+        if (partsOfNomenclatureString.containsKey(PartsOfString.COUNT_UNIT_NAME)) {
+            countUnitName = Integer.parseInt(partsOfNomenclatureString.get(PartsOfString.COUNT_UNIT_NAME));
+        }
     }
 
     /*    Функция заполнения реквизита из коллекции
