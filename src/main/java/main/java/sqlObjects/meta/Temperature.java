@@ -1,11 +1,18 @@
-package main.java.sqlObjects;
+package main.java.sqlObjects.meta;
+
+import main.java.sqlObjects.SQLBaseObject;
 
 import java.util.Objects;
 
 public class Temperature extends SQLBaseObject {
 
-    public Temperature(String id) {
-        this.id = Integer.parseInt(id);
+    public Temperature(int id) {
+        new Temperature(id, false);
+    }
+
+    public Temperature(int id, boolean isNew) {
+        this.id = id;
+        this.isNew = isNew;
     }
 
     @Override

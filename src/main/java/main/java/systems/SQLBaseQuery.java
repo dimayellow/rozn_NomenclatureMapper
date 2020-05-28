@@ -1,10 +1,12 @@
 package main.java.systems;
 
 import main.java.sqlCollections.*;
+import main.java.sqlCollections.meta.*;
 import main.java.systems.sqlQueries.*;
 
 import java.sql.*;
 import java.util.LinkedList;
+import java.util.Set;
 
 public class SQLBaseQuery {
 
@@ -29,6 +31,13 @@ public class SQLBaseQuery {
         Connection connection = pool.retrieve();
         Statement statement = connection.createStatement();
         return statement.executeQuery(request);
+    }
+
+    private void InsertInSql(String request) throws SQLException {
+        Connection connection = pool.retrieve();
+        Statement statement = connection.createStatement();
+        int count = statement.executeUpdate(request);
+        System.out.println("Добавлено " + count + " строк");
     }
 
     public LinkedList<String> getListFromSQL(SQLQueries sqlQueries) throws SQLException {
@@ -83,6 +92,12 @@ public class SQLBaseQuery {
 
     }
 
+    public void fillForecastTovarsFromSQL() throws SQLException {
+
+        fillObjectsFromSQL(ForecastTovars.getInstance(), new ForecastTovarQuery());
+
+    }
+
     public void fillTemperaturesFromSQL() throws SQLException {
 
         fillObjectsFromSQL(Temperatures.getInstance(), new TemperatureQuery());
@@ -114,5 +129,20 @@ public class SQLBaseQuery {
                 //" GROUP By tovars.TovarId, tovars.Title, fTovars.Title\n"
                 " GROUP By fTovars.Title";
     }
+
+    public void insertTailes(Set<String> tailSet) {
+        String insertQuery = "";
+        for (String s : tailSet) {
+            insertQuery+="insert into dbo.tails (Name)\n";
+            insertQuery+= "values ('" + s + "')\n";
+        }
+        try {
+            InsertInSql(insertQuery);
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+
+    // Общие запросы
 
 }

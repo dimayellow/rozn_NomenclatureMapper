@@ -1,20 +1,20 @@
 package main.java.sqlCollections;
 
-import main.java.sqlObjects.Grade;
-import main.java.sqlObjects.Soda;
+import main.java.sqlObjects.ForecastTovar;
 import main.java.systems.SQLBaseQuery;
 
 import java.sql.SQLException;
 
-public class Grades extends SQLCollections<Grade>{
-    private static Grades instance;
+public class ForecastTovars extends SQLCollections<ForecastTovar> {
 
-    private Grades() {
+    private static ForecastTovars instance;
+
+    private ForecastTovars() {
     }
 
-    public static Grades getInstance() {
+    public static ForecastTovars getInstance() {
         if (instance == null) {
-            instance = new Grades();
+            instance = new ForecastTovars();
         }
         return instance;
     }
@@ -22,6 +22,6 @@ public class Grades extends SQLCollections<Grade>{
     public void fillIn() throws SQLException {
         super.fillIn();
         SQLBaseQuery sqlBaseManager = SQLBaseQuery.getInstance();
-        sqlBaseManager.fillGradesFromSQL();
+        sqlBaseManager.fillForecastTovarsFromSQL();
     }
 }

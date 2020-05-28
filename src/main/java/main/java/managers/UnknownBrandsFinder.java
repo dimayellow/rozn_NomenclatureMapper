@@ -1,7 +1,7 @@
 package main.java.managers;
 
-import main.java.sqlCollections.Brands;
-import main.java.sqlObjects.Brand;
+import main.java.sqlCollections.meta.Brands;
+import main.java.sqlObjects.meta.Brand;
 import main.java.systems.MyProjectSettings;
 import main.java.systems.SQLBaseQuery;
 
@@ -58,14 +58,7 @@ public class UnknownBrandsFinder implements Runnable{
 
         startDate = new Date();
         MyProjectSettings settings = MyProjectSettings.getInstance();
-//        try (FileOutputStream outputStream = new FileOutputStream(settings.getProjectPath() + "/Files/brandsWithIncompleteCompliance.txt"))
-//        {
-//            for (Map.Entry<String, String> s : brandsWithIncompleteCompliance.entrySet()) {
-//                outputStream.write((s.getKey() + " : " + s.getValue() + "\n").getBytes());
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+
         try (FileOutputStream outputStream = new FileOutputStream(settings.getProjectPath() + "/Files/unfindBrands.txt"))
         {
             for (String unfindBrand : unfindBrands) {

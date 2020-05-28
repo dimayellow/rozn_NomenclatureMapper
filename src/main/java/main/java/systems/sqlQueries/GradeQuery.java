@@ -1,11 +1,11 @@
 package main.java.systems.sqlQueries;
 
-import main.java.sqlObjects.Soda;
+import main.java.sqlObjects.meta.Grade;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class GradeQuery implements SQLQueries<Soda>{
+public class GradeQuery implements SQLQueries<Grade>{
     @Override
     public String getQuery() {
         return "Select\n" +
@@ -16,12 +16,12 @@ public class GradeQuery implements SQLQueries<Soda>{
     }
 
     @Override
-    public Soda getElement(ResultSet executeQuery) throws SQLException {
-        Soda soda = new Soda(executeQuery.getString("id"));
-        soda.addName(executeQuery.getString("title"));
-        soda.addNamesFromString(executeQuery.getString("syns"));
-        soda.sort();
+    public Grade getElement(ResultSet executeQuery) throws SQLException {
+        Grade grade = new Grade(executeQuery.getInt("id"));
+        grade.addName(executeQuery.getString("title"));
+        grade.addNamesFromString(executeQuery.getString("syns"));
+        grade.sort();
 
-        return soda;
+        return grade;
     }
 }

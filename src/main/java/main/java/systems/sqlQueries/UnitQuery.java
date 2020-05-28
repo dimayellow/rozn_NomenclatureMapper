@@ -1,6 +1,6 @@
 package main.java.systems.sqlQueries;
 
-import main.java.sqlObjects.Unit;
+import main.java.sqlObjects.meta.Unit;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -18,7 +18,7 @@ public class UnitQuery implements SQLQueries<Unit> {
 
     @Override
     public Unit getElement(ResultSet executeQuery) throws SQLException {
-        Unit unit = new Unit(executeQuery.getString("id"));
+        Unit unit = new Unit(executeQuery.getInt("id"));
         unit.addNamesFromString(executeQuery.getString("syns"));
         unit.sort();
 

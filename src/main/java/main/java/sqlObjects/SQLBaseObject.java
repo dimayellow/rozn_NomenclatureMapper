@@ -7,6 +7,7 @@ import java.util.Objects;
 public abstract class SQLBaseObject {
     protected int id;
     protected List<String> names = new ArrayList<>();
+    protected boolean isNew;
 
     public List<String> getNames() {
         return names;

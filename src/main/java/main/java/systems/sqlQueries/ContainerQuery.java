@@ -1,29 +1,27 @@
 package main.java.systems.sqlQueries;
 
-import main.java.sqlObjects.Brand;
+import main.java.sqlObjects.meta.Container;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class ContainerQuery implements SQLQueries<Brand> {
+public class ContainerQuery implements SQLQueries<Container> {
 
     @Override
     public String getQuery() {
         return "Select\n" +
-                "Tara.TaraId as id,\n" +
-                "isnull(Tara.Synonyms, '') as syns,\n" +
-                "Tara.Title as title\n" +
-                "from dbo.Tara as Tara";
+                "Container.TaraId as id,\n" +
+                "isnull(Container.Synonyms, '') as syns,\n" +
+                "Container.Title as title\n" +
+                "from dbo.Tara as Container";
     }
 
     @Override
-    public Brand getElement(ResultSet executeQuery) throws SQLException {
-        Brand brand = new Brand(executeQuery.getString("id"));
-        brand.addName(executeQuery.getString("rus"));
-        brand.addName(executeQuery.getString("eng"));
-        brand.addNamesFromString(executeQuery.getString("syns"));
-        brand.sort();
-
-        return brand;
+    public Container getElement(ResultSet executeQuery) throws SQLException {
+        Container tara = new Container(executeQuery.getInt("id"));
+        tara.addName(executeQuery.getString("title"));
+        tara.addNamesFromString(executeQuery.getString("syns"));
+        tara.sort();
+        return tara;
     }
 }

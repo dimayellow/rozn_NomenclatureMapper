@@ -1,7 +1,6 @@
 package main.java.systems.sqlQueries;
 
-import main.java.sqlObjects.Soda;
-import main.java.sqlObjects.Unit;
+import main.java.sqlObjects.meta.Soda;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -18,7 +17,7 @@ public class SodaQuery implements SQLQueries<Soda>{
 
     @Override
     public Soda getElement(ResultSet executeQuery) throws SQLException {
-        Soda soda = new Soda(executeQuery.getString("id"));
+        Soda soda = new Soda(executeQuery.getInt("id"));
         soda.addName(executeQuery.getString("title"));
         soda.addNamesFromString(executeQuery.getString("syns"));
         soda.sort();

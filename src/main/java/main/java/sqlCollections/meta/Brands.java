@@ -1,11 +1,12 @@
-package main.java.sqlCollections;
+package main.java.sqlCollections.meta;
 
-import main.java.sqlObjects.Brand;
+import main.java.sqlCollections.SQLCollections;
+import main.java.sqlObjects.meta.Brand;
 import main.java.systems.SQLBaseQuery;
 
 import java.sql.SQLException;
 
-public class Brands extends SQLCollections<Brand>{
+public class Brands extends SQLCollections<Brand> {
     private static Brands instance;
 
     private Brands() {

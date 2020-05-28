@@ -1,11 +1,11 @@
 package main.java.systems.sqlQueries;
 
-import main.java.sqlObjects.Brand;
+import main.java.sqlObjects.meta.Temperature;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class TemperatureQuery implements SQLQueries<Brand> {
+public class TemperatureQuery implements SQLQueries<Temperature> {
 
     @Override
     public String getQuery() {
@@ -17,13 +17,13 @@ public class TemperatureQuery implements SQLQueries<Brand> {
     }
 
     @Override
-    public Brand getElement(ResultSet executeQuery) throws SQLException {
-        Brand brand = new Brand(executeQuery.getString("id"));
-        brand.addName(executeQuery.getString("rus"));
-        brand.addName(executeQuery.getString("eng"));
-        brand.addNamesFromString(executeQuery.getString("syns"));
-        brand.sort();
+    public Temperature getElement(ResultSet executeQuery) throws SQLException {
+        Temperature temperature = new Temperature(executeQuery.getInt("id"));
+        temperature.addName(executeQuery.getString("title"));
+        temperature.addNamesFromString(executeQuery.getString("syns"));
+        temperature.sort();
+        temperature.sort();
 
-        return brand;
+        return temperature;
     }
 }

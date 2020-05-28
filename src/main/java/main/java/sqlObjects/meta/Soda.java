@@ -1,11 +1,18 @@
-package main.java.sqlObjects;
+package main.java.sqlObjects.meta;
+
+import main.java.sqlObjects.SQLBaseObject;
 
 import java.util.Objects;
 
 public class Soda extends SQLBaseObject {
 
-    public Soda(String id) {
-        this.id = Integer.parseInt(id);
+    public Soda(int id) {
+        new Soda(id, false);
+    }
+
+    public Soda(int id, boolean isNew) {
+        this.id = id;
+        this.isNew = isNew;
     }
 
     @Override

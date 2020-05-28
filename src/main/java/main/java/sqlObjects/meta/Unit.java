@@ -1,15 +1,19 @@
-package main.java.sqlObjects;
+package main.java.sqlObjects.meta;
 
-import java.util.ArrayList;
-import java.util.List;
+import main.java.sqlObjects.SQLBaseObject;
+
 import java.util.Objects;
 
-public class Unit extends SQLBaseObject{
+public class Unit extends SQLBaseObject {
 
-    public Unit(String id) {
-        this.id = Integer.parseInt(id);
+    public Unit(int id) {
+        new Unit(id, false);
     }
 
+    public Unit(int id, boolean isNew) {
+        this.id = id;
+        this.isNew = isNew;
+    }
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

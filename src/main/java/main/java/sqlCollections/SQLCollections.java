@@ -1,7 +1,5 @@
 package main.java.sqlCollections;
 
-import main.java.sqlObjects.Unit;
-
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,7 +21,7 @@ public abstract class SQLCollections<S> {
     }
 
     public void fillIn(boolean needFillingCheck) throws SQLException {
-        if (needFillingCheck & !isFilled()) {
+        if (needFillingCheck && !isFilled()) {
             fillIn();
         }
     }

@@ -1,11 +1,12 @@
-package main.java.sqlCollections;
+package main.java.sqlCollections.meta;
 
-import main.java.sqlObjects.Unit;
+import main.java.sqlCollections.SQLCollections;
+import main.java.sqlObjects.meta.Unit;
 import main.java.systems.SQLBaseQuery;
 
 import java.sql.SQLException;
 
-public class Units extends SQLCollections<Unit>{
+public class Units extends SQLCollections<Unit> {
     private static Units instance;
 
     private Units() {

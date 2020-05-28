@@ -1,6 +1,6 @@
 package main.java.systems.sqlQueries;
 
-import main.java.sqlObjects.Brand;
+import main.java.sqlObjects.meta.Brand;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -21,7 +21,7 @@ public class BrandQuery implements SQLQueries<Brand> {
 
     @Override
     public Brand getElement(ResultSet executeQuery) throws SQLException {
-        Brand brand = new Brand(executeQuery.getString("id"));
+        Brand brand = new Brand(executeQuery.getInt("id"));
         brand.addName(executeQuery.getString("rus"));
         brand.addName(executeQuery.getString("eng"));
         brand.addNamesFromString(executeQuery.getString("syns"));

@@ -2,7 +2,9 @@ package main.java.managers;
 
 import main.java.enums.PartsOfString;
 import main.java.sqlCollections.*;
+import main.java.sqlCollections.meta.*;
 import main.java.sqlObjects.*;
+import main.java.sqlObjects.meta.*;
 import main.java.systems.MyProjectSettings;
 
 import java.io.BufferedReader;
@@ -25,18 +27,18 @@ public class NomenclatureStringParser {
 
     LinkedList<String> tails = new LinkedList<>();
 
+    private HashMap<String, PartsOfString> partsNotFound = new HashMap<>();
     private HashMap<PartsOfString, String> partsOfNomenclatureString = new HashMap<>();
-
     private Brand brand = null;
     private Unit unit = null;
     private Catalog catalog = null;
     private Soda soda = null;
 
     private Container tara = null;
-    private SQLBaseObject temperature = null;
-    private SQLBaseObject Grade = null;
+    private Temperature temperature = null;
+    private Grade grade = null;
 
-    private int countUnitName = 0;
+    double countUnitName = 0.0;
 
     public NomenclatureStringParser(String stringForParse) {
         this.stringForParse = stringForParse;
@@ -68,39 +70,120 @@ public class NomenclatureStringParser {
         System.out.println("Найденный бренд: " + getObjectString(brand));
         System.out.println("Каталог: " + getObjectString(catalog));
         System.out.println("Найденная ед. изм.: " + getObjectString(unit));
+        System.out.println("Газировка: " + getObjectString(soda));
+        System.out.println("Тара: " + getObjectString(tara));
+        System.out.println("Сорт: " + getObjectString(grade));
+        System.out.println("Температура: " + getObjectString(temperature));
+        System.out.println("Количество ед. :" + countUnitName);
+
+
     }
 
+    public HashMap<String, PartsOfString> getPartsNotFound() {
+        return partsNotFound;
+    }
 
-    private void findSQLObjectInMap(SQLCollections sqlCollection, PartsOfString part) throws SQLException {
+    public String getStringRest() {
+        return stringRest;
+    }
+
+    public Brand getBrand() {
+        return brand;
+    }
+
+    public Unit getUnit() {
+        return unit;
+    }
+
+    public Catalog getCatalog() {
+        return catalog;
+    }
+
+    public Soda getSoda() {
+        return soda;
+    }
+
+    public Container getTara() {
+        return tara;
+    }
+
+    public Temperature getTemperature() {
+        return temperature;
+    }
+
+    public Grade getGrade() {
+        return grade;
+    }
+
+    public double getCountUnitName() {
+        return countUnitName;
+    }
+
+    private void findSQLObjectInMap(SQLCollections sqlCollection, PartsOfString part, boolean regExFind) throws SQLException {
 
         if (!partsOfNomenclatureString.containsKey(part)) return;
 
-        String partName = partsOfNomenclatureString.get(part);
+        String partName = partsOfNomenclatureString.get(part).trim();
 
         sqlCollection.fillIn(true);
 
         boolean objectFind = false;
         for (SQLBaseObject sqlBaseObject : ((SQLCollections<SQLBaseObject>) sqlCollection).getList()) {
             for (String sboNameVariation : sqlBaseObject.getNames()) {
-                if (partName.equals(sboNameVariation)) {
+                objectFind = findPartNameInVariation(sboNameVariation, partName, regExFind);
+
+                if (objectFind) {
                     variableByPartName(sqlBaseObject, part);
-                    objectFind = true;
                     break;
                 }
             }
             if (objectFind) break;
         }
+        if (!objectFind) {
+            partsNotFound.put(partName, part);
+        }
+
+    }
+
+    private void findSQLObjectInMap(SQLCollections sqlCollection, PartsOfString part) throws SQLException {
+        findSQLObjectInMap(sqlCollection, part, false);
+    }
+
+    private boolean findPartNameInVariation(String sboNameVariation , String partName, boolean regExFind) {
+        boolean objectFind = false;
+        if (regExFind) {
+            Pattern pattern = Pattern.compile(sboNameVariation);
+            Matcher matcher = pattern.matcher(partName);
+
+            objectFind = matcher.find();
+
+        } else {
+            if (partName.equals(sboNameVariation)) {
+                objectFind = true;
+            }
+        }
+
+
+        return objectFind;
     }
 
     private void fillObjectsByMap() throws SQLException {
         findSQLObjectInMap(Units.getInstance(), PartsOfString.UNIT_NAME);
         findSQLObjectInMap(Sodas.getInstance(), PartsOfString.SODA);
         findSQLObjectInMap(Containers.getInstance(), PartsOfString.TARA);
-        findSQLObjectInMap(Grades.getInstance(), PartsOfString.GRADE);
-        findSQLObjectInMap(Temperatures.getInstance(), PartsOfString.TEMPERATURE_CONDITIONS);
+        findSQLObjectInMap(Grades.getInstance(), PartsOfString.GRADE, true);
+        findSQLObjectInMap(Temperatures.getInstance(), PartsOfString.TEMPERATURE_CONDITIONS, true);
         if (partsOfNomenclatureString.containsKey(PartsOfString.COUNT_UNIT_NAME)) {
-            countUnitName = Integer.parseInt(partsOfNomenclatureString.get(PartsOfString.COUNT_UNIT_NAME));
+            try {
+                String cUnit = partsOfNomenclatureString.get(PartsOfString.COUNT_UNIT_NAME).trim();
+                cUnit = cUnit.replaceAll("\\D", ".");
+                countUnitName = Double.parseDouble(cUnit);
+            } catch (NumberFormatException e) {
+                int f = 1;
+            }
+
         }
+        stringRest = stringRest.replaceAll("\\p{Punct}", "");
     }
 
     /*    Функция заполнения реквизита из коллекции
@@ -108,7 +191,7 @@ public class NomenclatureStringParser {
     private void variableByPartName(SQLBaseObject baseObject, PartsOfString part) {
         switch (part) {
             case GRADE:
-                Grade = baseObject;
+                grade = (Grade) baseObject;
                 break;
             case TARA:
                 tara = (Container) baseObject;
@@ -121,10 +204,12 @@ public class NomenclatureStringParser {
                 break;
             case CATALOG:
                 catalog = (Catalog) baseObject;
+                break;
             case UNIT_NAME:
                 unit = (Unit) baseObject;
+                break;
             case TEMPERATURE_CONDITIONS:
-                temperature = baseObject;
+                temperature = (Temperature) baseObject;
                 break;
         }
     }
@@ -186,7 +271,7 @@ public class NomenclatureStringParser {
 
         Pattern pattern = Pattern.compile(unitFindRegEx);
         Matcher matcher = pattern.matcher(stringRest);
-        while (matcher.find()) {
+        if (matcher.find()) {
             String findUnit = stringRest.substring(matcher.start(), matcher.end());
             this.fillInPartsOfNomenclatureString(partOfString, findUnit);
         }
@@ -200,7 +285,8 @@ public class NomenclatureStringParser {
         String thisRegEx = "";
         String valueWithCount = partsOfNomenclatureString.get(PartsOfString.UNIT_WITH_COUNT);
 
-        PartsOfString[] parts = {PartsOfString.UNIT_NAME, PartsOfString.UNIT_WITH_COUNT};
+        valueWithCount = valueWithCount.replace(",", ".");
+        PartsOfString[] parts = {PartsOfString.UNIT_NAME, PartsOfString.COUNT_UNIT_NAME};
 
         for (PartsOfString part : parts) {
 
@@ -208,9 +294,11 @@ public class NomenclatureStringParser {
 
             Pattern pattern = Pattern.compile(thisRegEx);
             Matcher matcher = pattern.matcher(valueWithCount);
-            if (matcher.find()) fillInPartsOfNomenclatureString(part,
-                    valueWithCount.substring(matcher.start(), matcher.end())
-            );
+            if (matcher.find()) {
+                fillInPartsOfNomenclatureString(part,
+                        valueWithCount.substring(matcher.start(), matcher.end())
+                );
+            }
         }
     }
 
@@ -221,7 +309,7 @@ public class NomenclatureStringParser {
     }
 
     private void delValueFromStringRest(String value) {
-        stringRest = stringRest.replaceAll(value, "");
+        stringRest = stringRest.replace(value, "");
     }
 
     /* Список регулярных выражений, в зависимости от параметра.
@@ -230,7 +318,7 @@ public class NomenclatureStringParser {
         String regExReply = "";
         switch (partOfString) {
             case UNIT_WITH_COUNT : {
-                regExReply = "(\\d+(.|,))?\\d+\\s?" + unitsRegExp + "\\b";
+                regExReply = "\\d+((,|\\.)(\\d)+)?(\\s+)?" + unitsRegExp + "\\b";
                 break;
             }
             case PACKING: {
@@ -254,7 +342,7 @@ public class NomenclatureStringParser {
                 break;
             }
             case GRADE: {
-                regExReply = "((\\d-?(ый)?)|высш+.(ий)?)\\s?сорт|в/с";
+                regExReply = "(((1?|перв)|(2?|втор)|(3?|трет)|выс(ш)?)((ый|ой|ий.))?\\s?сорт)|в/с";
                 break;
             }
         }

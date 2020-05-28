@@ -1,11 +1,18 @@
-package main.java.sqlObjects;
+package main.java.sqlObjects.meta;
+
+import main.java.sqlObjects.SQLBaseObject;
 
 import java.util.Objects;
 
 public class Catalog extends SQLBaseObject {
 
-    public Catalog(String id) {
-        this.id = Integer.parseInt(id);
+    public Catalog(int id) {
+        new Catalog(id, false);
+    }
+
+    public Catalog(int id, boolean isNew) {
+        this.id = id;
+        this.isNew = isNew;
     }
 
     @Override

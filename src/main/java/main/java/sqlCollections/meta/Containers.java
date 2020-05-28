@@ -1,6 +1,7 @@
-package main.java.sqlCollections;
+package main.java.sqlCollections.meta;
 
-import main.java.sqlObjects.Container;
+import main.java.sqlCollections.SQLCollections;
+import main.java.sqlObjects.meta.Container;
 import main.java.systems.SQLBaseQuery;
 
 import java.sql.SQLException;

@@ -1,11 +1,12 @@
-package main.java.sqlCollections;
+package main.java.sqlCollections.meta;
 
-import main.java.sqlObjects.Soda;
+import main.java.sqlCollections.SQLCollections;
+import main.java.sqlObjects.meta.Soda;
 import main.java.systems.SQLBaseQuery;
 
 import java.sql.SQLException;
 
-public class Sodas extends SQLCollections<Soda>{
+public class Sodas extends SQLCollections<Soda> {
     private static Sodas instance;
 
     private Sodas() {
