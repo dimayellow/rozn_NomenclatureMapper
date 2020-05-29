@@ -7,12 +7,7 @@ import java.util.Objects;
 public class Temperature extends SQLBaseObject {
 
     public Temperature(int id) {
-        new Temperature(id, false);
-    }
-
-    public Temperature(int id, boolean isNew) {
         this.id = id;
-        this.isNew = isNew;
     }
 
     @Override

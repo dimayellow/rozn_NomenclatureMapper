@@ -7,12 +7,7 @@ import java.util.Objects;
 public class Brand extends SQLBaseObject {
 
     public Brand(int id) {
-        new Brand(id, false);
-    }
-
-    public Brand(int id, boolean isNew) {
-        this.id = id;
-        this.isNew = isNew;
+        this.id = id;;
     }
 
     @Override

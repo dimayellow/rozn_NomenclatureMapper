@@ -7,12 +7,7 @@ import java.util.Objects;
 public class Grade extends SQLBaseObject {
 
     public Grade(int id) {
-        new Grade(id, false);
-    }
-
-    public Grade(int id, boolean isNew) {
         this.id = id;
-        this.isNew = isNew;
     }
 
     @Override

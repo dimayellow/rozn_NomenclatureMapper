@@ -1,11 +1,9 @@
 package main.java.managers;
 
-import main.java.enums.PartsOfString;
 import main.java.sqlCollections.ForecastTovars;
-import main.java.sqlCollections.meta.*;
 import main.java.sqlObjects.ForecastTovar;
-import main.java.systems.MyProjectSettings;
 import main.java.systems.SQLBaseQuery;
+import main.java.systems.sqlQueries.ParsedTableInSql;
 
 import java.io.*;
 import java.sql.SQLException;
@@ -17,23 +15,7 @@ public class AggregateSQL {
 
     private ForecastTovars forecastTovars = ForecastTovars.getInstance();
 
-    HashMap<String, PartsOfString> partsNotFound = new HashMap<>();
-
-    private Brands brands = Brands.getInstance();
-    private Catalogs catalogs = Catalogs.getInstance();
-    private Containers containers = Containers.getInstance();
-    private Grades grades = Grades.getInstance();
-    private Sodas sodas = Sodas.getInstance();
-    private Units units = Units.getInstance();
-    private Temperatures temperatures = Temperatures.getInstance();
-
-
     public void fillSQL() throws FileNotFoundException {
-
-        //      String path = MyProjectSettings.getInstance().getProjectPath();
-
-        //        PrintStream out = new PrintStream(new FileOutputStream(path + "/output.txt"));
-        //        System.setOut(out);
 
         Date fDate = new Date();
         System.out.println("Загрузка forecastTovars");
@@ -46,18 +28,13 @@ public class AggregateSQL {
         Date sDate = new Date();
         System.out.println("Загрузка forecastTovars закончилась " + ((double) sDate.getTime() - fDate.getTime())/1000);
 
-        boolean firstStep = true;
         int index = 0;
-        int countFtovars = forecastTovars.getList().size();
+        LinkedList<NomenclatureStringParser> parserList = new LinkedList<>();
+
         for (ForecastTovar forecastTovar : forecastTovars.getList()) {
 
-            NomenclatureStringParser parser = new NomenclatureStringParser(forecastTovar.getName());
-            if (firstStep) {
-                fDate = new Date();
-                System.out.println("Парсинг первой номенклатуры закончен " + ((double) fDate.getTime() - sDate.getTime())/1000);
-                firstStep = false;
-            }
-            index++;
+            NomenclatureStringParser parser = new NomenclatureStringParser(forecastTovar.getName(), forecastTovar.getId(), forecastTovar.getCount());
+
             try {
                 parser.parseString();
             } catch (SQLException throwables) {
@@ -65,23 +42,30 @@ public class AggregateSQL {
                 throwables.printStackTrace();
                 continue;
             }
-            if ((index % 10000) == 0) {
-                System.out.println("Выполнено: " + index + "/" + countFtovars);
+            index++;
+            parserList.add(parser);
+            if (index  >= 1000) {
+
+                startThread(parserList);
+
+                parserList.clear();
+                index = 0;
             }
+
             String [] subs = parser.getStringRest().split(" ");
             for (String sub : subs) {
                 if (!sub.equals("")) tailSet.add(sub);
             }
         }
+        startThread(parserList);
 
-        sDate = new Date();
 
-        System.out.println("Начинаем загрузку хвостов " + ((double) sDate.getTime() - fDate.getTime())/1000);
-        SQLBaseQuery.getInstance().insertTailes(tailSet);
+    }
 
-        fDate = new Date();
-        System.out.println("Готово " + ((double) fDate.getTime() - sDate.getTime())/1000);
-
+    private void startThread(LinkedList<NomenclatureStringParser> parserList) {
+        ParsedTableInSql sendRequest = new ParsedTableInSql(parserList);
+        Thread thread = new Thread(sendRequest);
+        thread.start();
     }
     
     public static void main(String[] args) {

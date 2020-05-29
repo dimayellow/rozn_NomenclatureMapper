@@ -1,9 +1,11 @@
-package main.java.systems.sqlQueries;
+package main.java.systems.sqlQueries.select;
+
+import main.java.systems.sqlQueries.SQLQueries;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class TitleQuery implements SQLQueries<String>{
+public class TitleQuery implements SQLQueries<String> {
 
     @Override
     public String getQuery() { 

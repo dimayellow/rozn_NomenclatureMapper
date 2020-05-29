@@ -7,13 +7,9 @@ import java.util.Objects;
 public class Unit extends SQLBaseObject {
 
     public Unit(int id) {
-        new Unit(id, false);
+        this.id = id;;
     }
 
-    public Unit(int id, boolean isNew) {
-        this.id = id;
-        this.isNew = isNew;
-    }
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

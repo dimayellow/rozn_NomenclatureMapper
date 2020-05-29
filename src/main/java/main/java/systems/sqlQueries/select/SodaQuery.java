@@ -1,11 +1,12 @@
-package main.java.systems.sqlQueries;
+package main.java.systems.sqlQueries.select;
 
 import main.java.sqlObjects.meta.Soda;
+import main.java.systems.sqlQueries.SQLQueries;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class SodaQuery implements SQLQueries<Soda>{
+public class SodaQuery implements SQLQueries<Soda> {
     @Override
     public String getQuery() {
         return "Select\n" +

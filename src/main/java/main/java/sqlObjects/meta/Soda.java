@@ -7,12 +7,7 @@ import java.util.Objects;
 public class Soda extends SQLBaseObject {
 
     public Soda(int id) {
-        new Soda(id, false);
-    }
-
-    public Soda(int id, boolean isNew) {
         this.id = id;
-        this.isNew = isNew;
     }
 
     @Override

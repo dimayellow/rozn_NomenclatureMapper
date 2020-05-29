@@ -13,36 +13,45 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class NomenclatureStringParser {
 
-    private final String unitsRegExp = "(г|гр|кг|мл|л|грамм)";
-
     private final String stringForParse;
-    private String stringRest;
-
-    LinkedList<String> tails = new LinkedList<>();
+    private final int forecastTovarId;
+    private final int forecastTovarCount;
+    private String stringRest = "";
 
     private HashMap<String, PartsOfString> partsNotFound = new HashMap<>();
     private HashMap<PartsOfString, String> partsOfNomenclatureString = new HashMap<>();
+
+    private String tails = "";
+
     private Brand brand = null;
     private Unit unit = null;
     private Catalog catalog = null;
     private Soda soda = null;
-
     private Container tara = null;
     private Temperature temperature = null;
     private Grade grade = null;
 
     double countUnitName = 0.0;
 
-    public NomenclatureStringParser(String stringForParse) {
-        this.stringForParse = stringForParse;
+    public NomenclatureStringParser(String stringForParse, int forecastTovarId, int forecastTovarCount) {
+        this.stringForParse = stringForParse.trim();
+        this.forecastTovarId = forecastTovarId;
+        this.forecastTovarCount = forecastTovarCount;
         stringRest = stringForParse.toLowerCase();
+    }
+
+    public NomenclatureStringParser(String stringForParse) {
+        this(stringForParse, -1, 0);
+    }
+
+    public String getStringForParse() {
+        return stringForParse;
     }
 
     public void parseString() throws SQLException {
@@ -55,7 +64,7 @@ public class NomenclatureStringParser {
             splitUpUnitAndCount();
         }
         fillObjectsByMap();
-
+        parseTails();
     }
 
     public void printParseInformation() {
@@ -87,6 +96,18 @@ public class NomenclatureStringParser {
         return stringRest;
     }
 
+    public String getTails() {
+        return tails;
+    }
+
+    public int getForecastTovarId() {
+        return forecastTovarId;
+    }
+
+    public int getForecastTovarCount() {
+        return forecastTovarCount;
+    }
+
     public Brand getBrand() {
         return brand;
     }
@@ -115,8 +136,19 @@ public class NomenclatureStringParser {
         return grade;
     }
 
-    public double getCountUnitName() {
-        return countUnitName;
+    public String getCountUnitName() {
+        return Double.valueOf(countUnitName).toString().replace(",", ".");
+    }
+
+    public void parseTails() {
+        Tails tailsList = Tails.getInstance();
+        String[] subs = stringRest.split(" ");
+        for (String sub : subs) {
+            if (sub.equals("") || sub.equals(" ")) continue;
+            Integer reply = tailsList.getId(sub);
+            if (reply != null) tails += reply.toString() + " ";
+        }
+        tails = tails.trim();
     }
 
     private void findSQLObjectInMap(SQLCollections sqlCollection, PartsOfString part, boolean regExFind) throws SQLException {
@@ -238,10 +270,6 @@ public class NomenclatureStringParser {
         }
     }
 
-    /* Поиск единицы измерения в распарсеной строке.
-    * Ищется по полному соответствию среди уже найденной единицы измерения.
-     */
-
     private void findCatalogInNomenclatureString() throws SQLException {
         Catalogs catalogs = Catalogs.getInstance();
         catalogs.fillIn(true);
@@ -265,7 +293,7 @@ public class NomenclatureStringParser {
     *  После этого найденное значение удаляется из строки.
      */
     private void findValueByRegEx(PartsOfString partOfString) {
-        final String unitFindRegEx = regExSwitcher(partOfString);
+        final String unitFindRegEx = partOfString.getRegEx();
 
         if (unitFindRegEx.equals("")) return;
 
@@ -290,7 +318,7 @@ public class NomenclatureStringParser {
 
         for (PartsOfString part : parts) {
 
-            thisRegEx = part == PartsOfString.UNIT_NAME ? unitsRegExp : "\\d+(.|,)?\\d+";
+            thisRegEx = part == PartsOfString.UNIT_NAME ? part.getRegEx() : "\\d+(.|,)?\\d+";
 
             Pattern pattern = Pattern.compile(thisRegEx);
             Matcher matcher = pattern.matcher(valueWithCount);
@@ -310,43 +338,6 @@ public class NomenclatureStringParser {
 
     private void delValueFromStringRest(String value) {
         stringRest = stringRest.replace(value, "");
-    }
-
-    /* Список регулярных выражений, в зависимости от параметра.
-     */
-    private String regExSwitcher(PartsOfString partOfString) {
-        String regExReply = "";
-        switch (partOfString) {
-            case UNIT_WITH_COUNT : {
-                regExReply = "\\d+((,|\\.)(\\d)+)?(\\s+)?" + unitsRegExp + "\\b";
-                break;
-            }
-            case PACKING: {
-                regExReply = "(x|х)+\\d{1,3}"; //"(x|х)+\\s?+\\d{1,3}";
-                break;
-            }
-            case SODA: {
-                regExReply = "негаз| б/г| б/газ | газированная | газ | сил/газ";
-                break;
-            }
-            case TEMPERATURE_CONDITIONS: {
-                regExReply = "охлажд[а-я]{1,10}|заморож[а-я]{1,10}";
-                break;
-            }
-            case PERCENT: {
-                regExReply = "((\\d+(.|,))?\\d%)";
-                break;
-            }
-            case TARA: {
-                regExReply = "(ж/б)|с/б|(ст/б)|(стекло)|бутылка|стакан|м/у|в вак|пэт|д/пак|в/у|тетра";
-                break;
-            }
-            case GRADE: {
-                regExReply = "(((1?|перв)|(2?|втор)|(3?|трет)|выс(ш)?)((ый|ой|ий.))?\\s?сорт)|в/с";
-                break;
-            }
-        }
-        return regExReply;
     }
 
     public String getObjectString(SQLBaseObject object) {

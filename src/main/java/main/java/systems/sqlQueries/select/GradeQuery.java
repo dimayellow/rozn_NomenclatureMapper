@@ -1,11 +1,12 @@
-package main.java.systems.sqlQueries;
+package main.java.systems.sqlQueries.select;
 
 import main.java.sqlObjects.meta.Grade;
+import main.java.systems.sqlQueries.SQLQueries;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class GradeQuery implements SQLQueries<Grade>{
+public class GradeQuery implements SQLQueries<Grade> {
     @Override
     public String getQuery() {
         return "Select\n" +

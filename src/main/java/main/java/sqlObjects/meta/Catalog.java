@@ -7,12 +7,7 @@ import java.util.Objects;
 public class Catalog extends SQLBaseObject {
 
     public Catalog(int id) {
-        new Catalog(id, false);
-    }
-
-    public Catalog(int id, boolean isNew) {
-        this.id = id;
-        this.isNew = isNew;
+        this.id = id;;
     }
 
     @Override
