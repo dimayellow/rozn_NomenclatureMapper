@@ -1,9 +1,10 @@
 package main.java.systems;
 
-import main.java.sqlCollections.*;
-import main.java.sqlCollections.meta.*;
-import main.java.systems.sqlQueries.*;
-import main.java.systems.sqlQueries.select.*;
+import main.java.common.sqlQQ.ForeCastParseNomQuery;
+import main.java.common.obj.sqlCollections.*;
+import main.java.common.obj.sqlCollections.meta.*;
+import main.java.common.obj.sqlObjects.ForecastParseNom;
+import main.java.filling.sqlQq.select.*;
 
 import java.sql.*;
 import java.util.HashMap;
@@ -21,7 +22,7 @@ public class SQLBaseQuery {
         this.pool = new ConnectionPool(1);
     }
 
-    public static SQLBaseQuery getInstance() {
+    public synchronized static SQLBaseQuery getInstance() {
         if (instance == null) {
             instance = new SQLBaseQuery();
         }
@@ -71,7 +72,33 @@ public class SQLBaseQuery {
         return map;
     }
 
+    public LinkedList<ForecastParseNom> getParseListFromBase(ForecastParseNom nom) throws SQLException {
+        LinkedList<ForecastParseNom> reply = new LinkedList<>();
+        ForeCastParseNomQuery foreCastParseNomQuery = new ForeCastParseNomQuery();
+        ResultSet executeQuery = createResultSet(foreCastParseNomQuery.getQueryFromParseNom(nom));
+
+        while (executeQuery.next()) {
+            reply.add(foreCastParseNomQuery.getElement(executeQuery));
+        }
+        return reply;
+    }
+
     // Методы по объектам
+
+
+    public HashMap<Integer, Integer> getTailMap() throws SQLException {
+        HashMap<Integer, Integer> map = new HashMap<>();
+        ResultSet executeQuery = createResultSet(new TailQuery().getQuery());
+        while (executeQuery.next()) {
+            int tailId = executeQuery.getInt("TovarId");
+            String [] tailAr = executeQuery.getString("TovarId").split(" ");
+            for (int i = 0; i < tailAr.length; i++) {
+                map.put(tailId, Integer.parseInt(tailAr[i]));
+            }
+        }
+
+        return map;
+    }
 
     public void fillBrandsFromSQL() throws SQLException {
 
@@ -147,6 +174,5 @@ public class SQLBaseQuery {
 
     }
 
-    // Общие запросы
 
 }

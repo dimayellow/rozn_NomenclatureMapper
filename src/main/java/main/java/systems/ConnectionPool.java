@@ -1,5 +1,7 @@
 package main.java.systems;
 
+import main.java.other.MyProjectSettings;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Vector;

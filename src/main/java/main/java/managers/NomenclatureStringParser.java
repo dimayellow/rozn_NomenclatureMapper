@@ -1,11 +1,11 @@
 package main.java.managers;
 
-import main.java.enums.PartsOfString;
-import main.java.sqlCollections.*;
-import main.java.sqlCollections.meta.*;
-import main.java.sqlObjects.*;
-import main.java.sqlObjects.meta.*;
-import main.java.systems.MyProjectSettings;
+import main.java.other.enums.PartsOfString;
+import main.java.common.obj.sqlCollections.*;
+import main.java.common.obj.sqlCollections.meta.*;
+import main.java.common.obj.sqlObjects.*;
+import main.java.common.obj.sqlObjects.meta.*;
+import main.java.other.MyProjectSettings;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -144,7 +144,7 @@ public class NomenclatureStringParser {
         Tails tailsList = Tails.getInstance();
         String[] subs = stringRest.split(" ");
         for (String sub : subs) {
-            if (sub.equals("") || sub.equals(" ")) continue;
+            if (sub.equals("") || sub.equals(" ") || sub == null) continue;
             Integer reply = tailsList.getId(sub);
             if (reply != null) tails += reply.toString() + " ";
         }
@@ -270,6 +270,23 @@ public class NomenclatureStringParser {
         }
     }
 
+    public ForecastParseNom createForecastParseNom() {
+        ForecastParseNom.Builder builder =  new ForecastParseNom.Builder(stringForParse);
+
+        if (brand != null) builder.setBrandId(brand.getId());
+        if (unit != null) builder.setUnit(unit.getId());
+        if (catalog != null) builder.setCatalog(catalog.getId());
+        if (soda != null) builder.setSoda(soda.getId());
+        if (tara != null) builder.setTara(tara.getId());
+        if (temperature != null) builder.setTemperature(temperature.getId());
+        if (grade != null) builder.setGrade(grade.getId());
+
+        builder.setCountUnitName(getCountUnitName());
+        builder.setTailList(tails);
+        return builder.build();
+
+    }
+
     private void findCatalogInNomenclatureString() throws SQLException {
         Catalogs catalogs = Catalogs.getInstance();
         catalogs.fillIn(true);
@@ -362,6 +379,7 @@ public class NomenclatureStringParser {
 
         testStringParser.parseString();
         testStringParser.printParseInformation();
+        System.out.println(testStringParser.createForecastParseNom().toString());
     }
 
 }
