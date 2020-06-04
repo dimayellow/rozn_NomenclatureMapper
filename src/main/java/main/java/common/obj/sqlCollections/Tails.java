@@ -11,11 +11,19 @@ public class Tails {
     private HashMap<String, Integer> tails;
 
     private Tails() {
+        refillInstance();
+    }
+
+    private void refillInstance() {
         try {
             tails = SQLBaseQuery.getInstance().getTailsFromSQL();
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
+    }
+
+    public static void refillTails() {
+        Tails.getInstance().refillInstance();
     }
 
     public static Tails getInstance() {

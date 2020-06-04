@@ -10,14 +10,11 @@ import java.util.LinkedList;
 
 public class ParsedTableInSql implements Runnable {
 
-    private final LinkedList<NomenclatureStringParser> parserList;
+    private final LinkedList<NomenclatureStringParser> parserList = new LinkedList<>();
     private static volatile int fileNum = 0;
 
     public ParsedTableInSql(LinkedList<NomenclatureStringParser> parserList) {
-        this.parserList = new LinkedList<>();
-        for (NomenclatureStringParser parser : parserList) {
-            this.parserList.add(parser);
-        }
+        this.parserList.addAll(parserList);
     }
 
     @Override
@@ -39,40 +36,40 @@ public class ParsedTableInSql implements Runnable {
                                                 ",[TemperatureId] " +
                                                 ",[UnitId] " +
                                                 ",[CountUnit] " +
-                                                ",[Tails])\n";
-        String valueString = "VALUES (%d, '%s', %d, %d, %d, %d, %d, %d, %d, %d, %s, '%s')\n";
+                                                ",[Tails]" +
+                                                ",[MetaWeight]\n" +
+                                                ",[TailWeight])";
+        String valueString = "VALUES (%d, '%s', %d, %d, %d, %d, %d, %d, %d, %d, %s, '%s', %d, %d)\n";
 
         System.out.println("Начало: " + Thread.currentThread().getId());
 
-        String query = "";
+        StringBuilder query = new StringBuilder();
 
         for (NomenclatureStringParser parser : parserList) {
-            query += insertString;
-            query += String.format(valueString, parser.getForecastTovarId(),
-                                                replaceStringForSql(parser.getStringForParse()),
-                                                parser.getForecastTovarCount(),
-                                                getId(parser.getBrand()),
-                                                getId(parser.getCatalog()),
-                                                getId(parser.getGrade()),
-                                                getId(parser.getSoda()),
-                                                getId(parser.getTara()),
-                                                getId(parser.getTemperature()),
-                                                getId(parser.getUnit()),
-                                                parser.getCountUnitName(),
-                                                parser.getTails()
-                                                );
+            query.append(insertString);
+            query.append(String.format(valueString, parser.getForecastTovarId(),
+                    replaceStringForSql(parser.getStringForParse()),
+                    parser.getForecastTovarCount(),
+                    getId(parser.getBrand()),
+                    getId(parser.getCatalog()),
+                    getId(parser.getGrade()),
+                    getId(parser.getSoda()),
+                    getId(parser.getTara()),
+                    getId(parser.getTemperature()),
+                    getId(parser.getUnit()),
+                    parser.getCountUnitName(),
+                    parser.getTails(),
+                    parser.getMetaWeight(),
+                    parser.getTailWeight()
+            ));
         }
 
         try {
-            SQLBaseQuery.getInstance().InsertInSql(query);
+            SQLBaseQuery.getInstance().InsertInSql(query.toString());
         } catch (SQLException throwables) {
             try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("/home/dmitryk/errors/errorSql" + fileNum++ + ".sql"), "UTF-8"));) {
-                out.write(query);
-            } catch (UnsupportedEncodingException e) {
-                System.out.println("Файл не записан");
-            } catch (FileNotFoundException e) {
-                System.out.println("Файл не записан");
-            } catch (IOException e) {
+                out.write(query.toString());
+            } catch (Exception e) {
                 System.out.println("Файл не записан");
             }
             throwables.printStackTrace();
@@ -89,8 +86,7 @@ public class ParsedTableInSql implements Runnable {
     }
 
     private String replaceStringForSql(String stringForSQLQuery) {
-        String reply = stringForSQLQuery.replaceAll("'", "''");
-        return reply;
+        return stringForSQLQuery.replaceAll("'", "''");
     }
 
 }

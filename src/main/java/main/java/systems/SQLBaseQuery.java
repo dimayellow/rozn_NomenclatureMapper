@@ -5,6 +5,7 @@ import main.java.common.obj.sqlCollections.*;
 import main.java.common.obj.sqlCollections.meta.*;
 import main.java.common.obj.sqlObjects.ForecastParseNom;
 import main.java.filling.sqlQq.select.*;
+import main.java.learning.sqlQq.TailsFromParseQuery;
 
 import java.sql.*;
 import java.util.HashMap;
@@ -15,8 +16,6 @@ public class SQLBaseQuery {
 
     private static SQLBaseQuery instance;
     private final ConnectionPool pool;
-
-    private HashMap<String, Integer> Tails;
 
     private SQLBaseQuery() {
         this.pool = new ConnectionPool(1);
@@ -31,7 +30,7 @@ public class SQLBaseQuery {
 
     // Общие методы
 
-    private ResultSet createResultSet(String request) throws SQLException {
+    public ResultSet createResultSet(String request) throws SQLException {
         Connection connection = pool.retrieve();
         Statement statement = connection.createStatement();
         return statement.executeQuery(request);
@@ -40,8 +39,7 @@ public class SQLBaseQuery {
     public void InsertInSql(String request) throws SQLException {
         Connection connection = pool.retrieve();
         Statement statement = connection.createStatement();
-        int count = statement.executeUpdate(request);
-        System.out.println("Добавлено");
+        statement.executeUpdate(request);
     }
 
     public LinkedList<String> getListFromSQL(SQLQueries sqlQueries) throws SQLException {
@@ -86,23 +84,30 @@ public class SQLBaseQuery {
     // Методы по объектам
 
 
-    public HashMap<Integer, Integer> getTailMap() throws SQLException {
-        HashMap<Integer, Integer> map = new HashMap<>();
-        ResultSet executeQuery = createResultSet(new TailQuery().getQuery());
+    public LinkedList<TailListWithCount> getTailList() throws SQLException {
+
+        LinkedList<TailListWithCount> reply = new LinkedList<>();
+
+        ResultSet executeQuery = createResultSet(new TailsFromParseQuery().getQuery());
         while (executeQuery.next()) {
             int tailId = executeQuery.getInt("TovarId");
-            String [] tailAr = executeQuery.getString("TovarId").split(" ");
-            for (int i = 0; i < tailAr.length; i++) {
-                map.put(tailId, Integer.parseInt(tailAr[i]));
+            String [] tailAr = executeQuery.getString("Tails").split(" ");
+            int count = 0;
+            LinkedList<Integer> tailForFrequencyList = new LinkedList<>();
+            for (String tail : tailAr) {
+                if (!tail.equals("")) {
+                    count++;
+                    tailForFrequencyList.add(Integer.parseInt(tail));
+                }
             }
+            reply.add(new TailListWithCount(tailId, tailForFrequencyList, count));
         }
 
-        return map;
+        return reply;
     }
 
     public void fillBrandsFromSQL() throws SQLException {
-
-        Brands brands = Brands.getInstance();
+        
         fillObjectsFromSQL(Brands.getInstance(), new BrandQuery());
     }
 
@@ -149,28 +154,6 @@ public class SQLBaseQuery {
     }
 
     public void insertTailes(Set<String> tailSet){
-        String insertQuery = "";
-
-        int count = 0;
-        for (String s : tailSet) {
-            insertQuery+= "insert into dbo.tails (Name)\n";
-            insertQuery+= "values ('" + s + "')\n";
-            count++;
-            if (count >= 1000) {
-                try {
-                    InsertInSql(insertQuery);
-                } catch (SQLException throwables) {
-                    throwables.printStackTrace();
-                }
-                insertQuery = "";
-                count = 0;
-            }
-        }
-        try {
-            InsertInSql(insertQuery);
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
 
     }
 

@@ -5,8 +5,17 @@ import main.java.systems.SQLQueries;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ForeCastParseNomQuery implements SQLQueries<ForecastParseNom> {
+
+    private ForecastParseNom forecastParseNom;
+    private final StringBuilder queryBuilder = new StringBuilder();
+    private final HashMap<String, String> conditionMap = new HashMap<>();
+
+    private String countUnit = "0";
+    private int unitId = 0;
 
 
     @Override
@@ -24,26 +33,99 @@ public class ForeCastParseNomQuery implements SQLQueries<ForecastParseNom> {
                 "      ,[CountUnit]\n" +
                 "      ,[Tails]\n" +
                 "      ,[ParseTovarId]\n" +
-                "  FROM [rozn].[dbo].[ForecastTovarParse]";
+                "  FROM [rozn].[dbo].[ForecastTovarParse]\n";
     }
 
     public String getQueryFromParseNom(ForecastParseNom nomenclature) {
-        String query = getQuery() + "\n";
 
-        if (nomenclature.getBrand() != 0) {
-            query += "where [BrandId]" + nomenclature.getBrand() + "\n";
-        }
-        if (nomenclature.getCatalog() != 0) {
-            query += "where [CatalogId]" + nomenclature.getCatalog() + "\n";
-        }
-        if (nomenclature.getUnit() != 0) {
-            query += "where [UnitId]" + nomenclature.getUnit() + "\n";
-        }
+        this.forecastParseNom = nomenclature;
+        fiilInMapWithSelectedFilledDetails();
+        countUnit = forecastParseNom.getCountUnitName();
+        unitId = forecastParseNom.getUnit();
 
-        return query;
+        queryBuilder.append(getQuery());
+        AddQueryConditions();
+
+        return queryBuilder.toString();
 
     }
 
+    private void AddQueryConditions() {
+
+        if (conditionMap.size() != 0) {
+            queryBuilder.append("WHERE ");
+            if (unitId != 0) {
+                addUnitCondition();
+                queryBuilder.append(" and ");
+            }
+            queryBuilder.append("(( 1=1 ");
+            addAllConditions();
+            queryBuilder.append(")");
+            if (conditionMap.size() > 1) {
+                addAllOptionsForConditionsWithoutOneCondition();
+            }
+            queryBuilder.append(")");
+        }
+    }
+
+    private void addAllConditions() {
+        for (Map.Entry<String, String> condition: conditionMap.entrySet()) {
+            chooseOptionFill(condition);
+        }
+    }
+
+    private void addAllOptionsForConditionsWithoutOneCondition() {
+        for (String excludedСondition : conditionMap.keySet()) {
+            queryBuilder.append(" OR (( 1=1)");
+            for (Map.Entry<String, String> condition: conditionMap.entrySet()) {
+                if (!(excludedСondition.equals(condition.getKey()))) {
+                    chooseOptionFill(condition);
+                }
+            }
+            queryBuilder.append(")\n order by TovarId");
+        }
+    }
+
+    private void chooseOptionFill(Map.Entry<String, String> condition) {
+        if (!condition.getKey().equals("[UnitId]")) {
+            addTextQueryConditionByEntry(condition);
+        }
+    }
+
+    private void addUnitCondition() {
+      //  queryBuilder.append(" and ");
+        queryBuilder.append(" [UnitId] = ");
+        queryBuilder.append(unitId);
+        queryBuilder.append(" and [CountUnit] = ");
+        queryBuilder.append(countUnit);
+    }
+
+    private void addTextQueryConditionByEntry(Map.Entry<String, String> condition) {
+        queryBuilder.append(" and ");
+        queryBuilder.append(condition.getKey());
+        queryBuilder.append(" = ");
+        queryBuilder.append(condition.getValue());
+    }
+
+    private void fiilInMapWithSelectedFilledDetails() {
+        for (Map.Entry<String, String> original: createMapOnForecastParseNomForQueryCreating().entrySet()) {
+            if (!(original.getValue().equals("0"))) conditionMap.put(original.getKey(), original.getValue());
+        }
+    }
+
+    private HashMap<String, String> createMapOnForecastParseNomForQueryCreating() {
+        HashMap<String, String> reply = new HashMap<>();
+
+        reply.put("[BrandId]", Integer.toString(forecastParseNom.getBrand()));
+        reply.put("[CatalogId]", Integer.toString(forecastParseNom.getCatalog()));
+        reply.put("[GradeId]", Integer.toString(forecastParseNom.getGrade()));
+        reply.put("[SodaId]", Integer.toString(forecastParseNom.getSoda()));
+        reply.put("[TaraId]", Integer.toString(forecastParseNom.getTara()));
+        reply.put("[TemperatureId]", Integer.toString(forecastParseNom.getTemperature()));
+       // reply.put("[UnitId]", Integer.toString(forecastParseNom.getUnit()));
+
+        return reply;
+    }
 
     @Override
     public ForecastParseNom getElement(ResultSet executeQuery) throws SQLException {

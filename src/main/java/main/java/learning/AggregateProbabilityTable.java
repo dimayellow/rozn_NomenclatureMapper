@@ -1,41 +1,72 @@
 package main.java.learning;
 
+import main.java.common.obj.sqlCollections.TailListWithCount;
 import main.java.systems.SQLBaseQuery;
 
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Map;
-import java.util.TreeMap;
+
 
 public class AggregateProbabilityTable {
 
-    private HashMap<Integer, Integer> tailMap;
+    private final LinkedList<TailListWithCount> tailForFrequencyList;
+    private LinkedList<Thread> threadList = new LinkedList<>();
 
     {
+        LinkedList<TailListWithCount> tailForFrequencyListTemp;
         try {
-            tailMap = SQLBaseQuery.getInstance().getTailMap();
+            tailForFrequencyListTemp = SQLBaseQuery.getInstance().getTailList();
         } catch (SQLException ex) {
-            tailMap = new HashMap<>();
+            tailForFrequencyListTemp = new LinkedList<>();
         }
+        tailForFrequencyList = tailForFrequencyListTemp;
     }
 
-    public void fiilInTailTable() {
+    public void createMapAndStartThread() {
 
+        for (TailListWithCount tailListWithCount : tailForFrequencyList) {
+            handleTailListWithCountAndStartTread(tailListWithCount);
+        }
+        joinThreads();
+
+    }
+
+    private void handleTailListWithCountAndStartTread(TailListWithCount tailListWithCount) {
         HashMap<Integer, Integer> oneIdMap = new HashMap<>();
-
-        LinkedList<Thread> threadList= new LinkedList<>();
-
-         //lastid = 0;
-
-        for (Map.Entry<Integer,Integer> elem : tailMap.entrySet()) {
-
+        for (Integer tailForFrequency : tailListWithCount.getTailForFrequencies()) {
+            oneIdMap = addTailCountInMap(oneIdMap, tailForFrequency);
         }
-
+        createNewThread(oneIdMap, tailListWithCount.getId(), tailListWithCount.getCount());
     }
 
-    private void createNewThread(HashMap<Integer, Integer> mapForAnalyze) {
-
+    private void joinThreads() {
+        for (Thread thread : threadList) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
+    private HashMap<Integer, Integer> addTailCountInMap(HashMap<Integer, Integer> oldMap, int tailForFrequency) {
+        int count = (oldMap.containsKey(tailForFrequency)) ? oldMap.get(tailForFrequency) : 0;
+        oldMap.put(tailForFrequency, ++count);
+        return oldMap;
+    }
+
+    private void createNewThread(HashMap<Integer, Integer> mapForAnalyze, int currentId, int size) {
+        TailInserter tailInserter = new TailInserter(mapForAnalyze, currentId, size);
+       // tailInserter.run();
+        Thread thread = new Thread(tailInserter);
+        thread.start();
+        threadList.add(thread);
+    }
+
+
+    public static void main(String[] args) {
+        AggregateProbabilityTable aggregateProbabilityTable = new AggregateProbabilityTable();
+        aggregateProbabilityTable.createMapAndStartThread();
+    }
 }

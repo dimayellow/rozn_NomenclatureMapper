@@ -22,10 +22,10 @@ public class NomenclatureStringParser {
     private final String stringForParse;
     private final int forecastTovarId;
     private final int forecastTovarCount;
-    private String stringRest = "";
+    private String stringRest;
 
-    private HashMap<String, PartsOfString> partsNotFound = new HashMap<>();
-    private HashMap<PartsOfString, String> partsOfNomenclatureString = new HashMap<>();
+    private final HashMap<String, PartsOfString> partsNotFound = new HashMap<>();
+    private final HashMap<PartsOfString, String> partsOfNomenclatureString = new HashMap<>();
 
     private String tails = "";
 
@@ -36,6 +36,8 @@ public class NomenclatureStringParser {
     private Container tara = null;
     private Temperature temperature = null;
     private Grade grade = null;
+    private int metaWeight = 0;
+    private int tailWeight = 0;
 
     double countUnitName = 0.0;
 
@@ -52,44 +54,6 @@ public class NomenclatureStringParser {
 
     public String getStringForParse() {
         return stringForParse;
-    }
-
-    public void parseString() throws SQLException {
-
-        findBrandInNomenclatureString();
-        findCatalogInNomenclatureString();
-
-        EnumSet.allOf(PartsOfString.class).forEach(this::findValueByRegEx);
-        if (partsOfNomenclatureString.containsKey(PartsOfString.UNIT_WITH_COUNT)) {
-            splitUpUnitAndCount();
-        }
-        fillObjectsByMap();
-        parseTails();
-    }
-
-    public void printParseInformation() {
-        System.out.println("Изначальная строка: " + stringForParse);
-        System.out.println("Остаток строки: " + stringRest);
-        System.out.println("Список найденных строк:");
-        for (Map.Entry<PartsOfString, String> part : partsOfNomenclatureString.entrySet()) {
-            System.out.printf("%30s : ", part.getKey().toString());
-            System.out.printf("%50s |", part.getValue());
-            System.out.println();
-        }
-        System.out.println("Найденный бренд: " + getObjectString(brand));
-        System.out.println("Каталог: " + getObjectString(catalog));
-        System.out.println("Найденная ед. изм.: " + getObjectString(unit));
-        System.out.println("Газировка: " + getObjectString(soda));
-        System.out.println("Тара: " + getObjectString(tara));
-        System.out.println("Сорт: " + getObjectString(grade));
-        System.out.println("Температура: " + getObjectString(temperature));
-        System.out.println("Количество ед. :" + countUnitName);
-
-
-    }
-
-    public HashMap<String, PartsOfString> getPartsNotFound() {
-        return partsNotFound;
     }
 
     public String getStringRest() {
@@ -140,15 +104,76 @@ public class NomenclatureStringParser {
         return Double.valueOf(countUnitName).toString().replace(",", ".");
     }
 
+    public int getMetaWeight() {
+        return metaWeight;
+    }
+
+    public int getTailWeight() {
+        return tailWeight;
+    }
+
     public void parseTails() {
         Tails tailsList = Tails.getInstance();
+        StringBuilder tailsB = new StringBuilder();
         String[] subs = stringRest.split(" ");
         for (String sub : subs) {
-            if (sub.equals("") || sub.equals(" ") || sub == null) continue;
-            Integer reply = tailsList.getId(sub);
-            if (reply != null) tails += reply.toString() + " ";
+            if (sub.equals("") || sub.equals(" ")) continue;
+            int reply = tailsList.getId(sub);
+            tailsB.append(reply);
+            tailsB.append(" ");
         }
-        tails = tails.trim();
+        tails = tailsB.toString().trim();
+        calculateWetght();
+    }
+
+    private void calculateWetght() {
+        int tailLength = tails.split(" ").length;
+        int wordCount = tailLength;
+        if (brand != null) wordCount++;
+        if (unit != null) wordCount++;
+        if (catalog != null) wordCount++;
+        if (soda != null) wordCount++;
+        if (tara != null) wordCount++;
+        if (temperature != null) wordCount++;
+        if (grade != null) wordCount++;
+
+        tailWeight = 100 * tailLength / wordCount;
+        metaWeight = 100 - tailWeight;
+    }
+
+    public void parseString() throws SQLException {
+
+        findBrandInNomenclatureString();
+        findCatalogInNomenclatureString();
+
+        EnumSet.allOf(PartsOfString.class).forEach(this::findValueByRegEx);
+        if (partsOfNomenclatureString.containsKey(PartsOfString.UNIT_WITH_COUNT)) {
+            splitUpUnitAndCount();
+        }
+        fillObjectsByMap();
+        parseTails();
+    }
+
+    public void printParseInformation() {
+        System.out.println("Изначальная строка: " + stringForParse);
+        System.out.println("Остаток строки: " + stringRest);
+        System.out.println("Список найденных строк:");
+        for (Map.Entry<PartsOfString, String> part : partsOfNomenclatureString.entrySet()) {
+            System.out.printf("%30s : ", part.getKey().toString());
+            System.out.printf("%50s |", part.getValue());
+            System.out.println();
+        }
+        System.out.println("Найденный бренд: " + getObjectString(brand));
+        System.out.println("Каталог: " + getObjectString(catalog));
+        System.out.println("Найденная ед. изм.: " + getObjectString(unit));
+        System.out.println("Газировка: " + getObjectString(soda));
+        System.out.println("Тара: " + getObjectString(tara));
+        System.out.println("Сорт: " + getObjectString(grade));
+        System.out.println("Температура: " + getObjectString(temperature));
+        System.out.println("Количество ед. :" + countUnitName);
+        System.out.println("мета вес: " + metaWeight);
+        System.out.println("хвост :" + tailWeight);
+
     }
 
     private void findSQLObjectInMap(SQLCollections sqlCollection, PartsOfString part, boolean regExFind) throws SQLException {
@@ -211,7 +236,7 @@ public class NomenclatureStringParser {
                 cUnit = cUnit.replaceAll("\\D", ".");
                 countUnitName = Double.parseDouble(cUnit);
             } catch (NumberFormatException e) {
-                int f = 1;
+                e.printStackTrace();
             }
 
         }
@@ -310,24 +335,25 @@ public class NomenclatureStringParser {
     *  После этого найденное значение удаляется из строки.
      */
     private void findValueByRegEx(PartsOfString partOfString) {
-        final String unitFindRegEx = partOfString.getRegEx();
+        final String regEx = partOfString.getRegEx();
 
-        if (unitFindRegEx.equals("")) return;
+        if (regEx.equals("") || partOfString == PartsOfString.UNIT_NAME) return;
 
-        Pattern pattern = Pattern.compile(unitFindRegEx);
+        Pattern pattern = Pattern.compile(regEx);
         Matcher matcher = pattern.matcher(stringRest);
         if (matcher.find()) {
             String findUnit = stringRest.substring(matcher.start(), matcher.end());
             this.fillInPartsOfNomenclatureString(partOfString, findUnit);
+            stringRest = stringRest.replaceAll(findUnit, "");
         }
-        delValueFromStringRest(unitFindRegEx);
+        delValueFromStringRest(regEx);
     }
 
     /* Разделяет уже найденное объединенное значение единицы и количества.
      */
     private void splitUpUnitAndCount() {
 
-        String thisRegEx = "";
+        String thisRegEx;
         String valueWithCount = partsOfNomenclatureString.get(PartsOfString.UNIT_WITH_COUNT);
 
         valueWithCount = valueWithCount.replace(",", ".");
@@ -335,7 +361,7 @@ public class NomenclatureStringParser {
 
         for (PartsOfString part : parts) {
 
-            thisRegEx = part == PartsOfString.UNIT_NAME ? part.getRegEx() : "\\d+(.|,)?\\d+";
+            thisRegEx = part == PartsOfString.UNIT_NAME ? part.getRegEx() : "\\d+(.|,)?\\d*";
 
             Pattern pattern = Pattern.compile(thisRegEx);
             Matcher matcher = pattern.matcher(valueWithCount);
@@ -381,5 +407,4 @@ public class NomenclatureStringParser {
         testStringParser.printParseInformation();
         System.out.println(testStringParser.createForecastParseNom().toString());
     }
-
 }
