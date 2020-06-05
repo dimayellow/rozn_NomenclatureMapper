@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class TailInserter implements Runnable {
 
-    private final HashMap<Integer, Integer> wordEntryStatistics;
+    private final HashMap<Integer, Integer> wordEntryStatistics = new HashMap<>();
     private final int id;
     private final int size;
 
@@ -18,7 +18,7 @@ public class TailInserter implements Runnable {
     private HashMap<Integer, Integer> percentMap = new HashMap<>();
 
     public TailInserter(HashMap<Integer, Integer> wordEntryStatistics, int id, int size) {
-        this.wordEntryStatistics = wordEntryStatistics;
+        this.wordEntryStatistics.putAll(wordEntryStatistics);
         this.id = id;
         this.size = size;
     }

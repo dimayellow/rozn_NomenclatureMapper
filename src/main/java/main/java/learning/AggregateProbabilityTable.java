@@ -10,7 +10,7 @@ import java.util.LinkedList;
 
 public class AggregateProbabilityTable {
 
-    private final LinkedList<TailListWithCount> tailForFrequencyList;
+    private final LinkedList<TailListWithCount> tailForFrequencyList = new LinkedList<>();
     private LinkedList<Thread> threadList = new LinkedList<>();
 
     {
@@ -20,7 +20,20 @@ public class AggregateProbabilityTable {
         } catch (SQLException ex) {
             tailForFrequencyListTemp = new LinkedList<>();
         }
-        tailForFrequencyList = tailForFrequencyListTemp;
+        TailListWithCount tailTemp = null;
+        for (TailListWithCount tailListWithCount : tailForFrequencyListTemp) {
+            if (tailTemp == null) {
+                tailTemp = new TailListWithCount(tailListWithCount.getId());
+            }
+            if (tailTemp.getId() != tailListWithCount.getId()) {
+                tailForFrequencyList.add(tailTemp);
+                tailTemp = new TailListWithCount(tailListWithCount.getId());
+            }
+            tailTemp.addCount();
+            for (Integer x : tailListWithCount.getTailForFrequencies()) {
+                tailTemp.addTailInList(x);
+            }
+        }
     }
 
     public void createMapAndStartThread() {

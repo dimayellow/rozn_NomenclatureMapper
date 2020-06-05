@@ -13,7 +13,7 @@ public class TailsFromParseQuery implements SQLQueries<String> {
     public String getQuery() {
         return "use rozn;" +
                 "WITH TovarIDList AS (\n" +
-                "SELECT top 100 [TovarId] as NeedId,\n" +
+                "SELECT [TovarId] as NeedId,\n" +
                 "count([ParseTovarId]) as countPTId\n" +
                 "  FROM [rozn].[dbo].[ForecastTovarParse] as ftp\n" +
                 "  group by [TovarId]\n" +

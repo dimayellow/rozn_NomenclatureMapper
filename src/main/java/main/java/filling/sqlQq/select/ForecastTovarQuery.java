@@ -9,7 +9,7 @@ import java.sql.SQLException;
 public class ForecastTovarQuery implements SQLQueries<ForecastTovar> {
     @Override
     public String getQuery() {
-        return "select top 2001\n" +
+        return "select\n" +
                 "tovars.TovarId as Id,\n" +
                 "ftovars.Title as title,\n" +
                 "count(ftovars.ForecastTovarId) as count\n" +

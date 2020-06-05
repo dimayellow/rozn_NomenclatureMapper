@@ -1,6 +1,7 @@
 package main.java.find;
 
 import main.java.common.obj.sqlObjects.ForecastParseNom;
+import main.java.common.obj.sqlObjects.NomenclatureFrequency;
 import main.java.common.sqlQQ.ForeCastParseNomQuery;
 import main.java.managers.NomenclatureStringParser;
 import main.java.other.MyProjectSettings;
@@ -17,7 +18,7 @@ public class TovarIdFinder {
 
     private final ForecastParseNom numForFind;
 
-    private final LinkedList<ForecastParseNom> forecastParseNoms = new LinkedList<>();
+    private final LinkedList<NomenclatureFrequency> nomenclatureFrequency = new LinkedList<>();
 
 
     public TovarIdFinder(ForecastParseNom numForFind) {
@@ -38,7 +39,7 @@ public class TovarIdFinder {
 
         ResultSet executeQuery = query.createResultSet(foreCastParseNomQuery.getQueryFromParseNom(numForFind));
         while (executeQuery.next()) {
-            forecastParseNoms.add(foreCastParseNomQuery.getElement(executeQuery));
+            nomenclatureFrequency.add(foreCastParseNomQuery.getElement(executeQuery));
         }
     }
 
@@ -61,6 +62,7 @@ public class TovarIdFinder {
 
         TovarIdFinder tovarIdFinder = new TovarIdFinder(testStringParser);
         System.out.println(tovarIdFinder.createSqlQuery());
+        System.out.println(testStringParser.getTails());
 
     }
 

@@ -1,6 +1,7 @@
 package main.java.common.sqlQQ;
 
 import main.java.common.obj.sqlObjects.ForecastParseNom;
+import main.java.common.obj.sqlObjects.NomenclatureFrequency;
 import main.java.systems.SQLQueries;
 
 import java.sql.ResultSet;
@@ -8,7 +9,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ForeCastParseNomQuery implements SQLQueries<ForecastParseNom> {
+public class ForeCastParseNomQuery implements SQLQueries<NomenclatureFrequency> {
 
     private ForecastParseNom forecastParseNom;
     private final StringBuilder queryBuilder = new StringBuilder();
@@ -21,8 +22,13 @@ public class ForeCastParseNomQuery implements SQLQueries<ForecastParseNom> {
     @Override
     public String getQuery() {
         return "SELECT [TovarId]\n" +
-                "      ,[ForecastTovarTitle]\n" +
-                "      ,[CountTitles]\n" +
+                "      ,[BrandFrequency]\n" +
+                "      ,[CatalogFrequency]\n" +
+                "      ,[GradeFrequency]\n" +
+                "      ,[SodaFrequency]\n" +
+                "      ,[TaraFrequency]\n" +
+                "      ,[TemperatureFrequency]\n" +
+                "      ,[UnitFrequency]\n" +
                 "      ,[BrandId]\n" +
                 "      ,[CatalogId]\n" +
                 "      ,[GradeId]\n" +
@@ -31,9 +37,10 @@ public class ForeCastParseNomQuery implements SQLQueries<ForecastParseNom> {
                 "      ,[TemperatureId]\n" +
                 "      ,[UnitId]\n" +
                 "      ,[CountUnit]\n" +
-                "      ,[Tails]\n" +
-                "      ,[ParseTovarId]\n" +
-                "  FROM [rozn].[dbo].[ForecastTovarParse]\n";
+                "      ,[MetaWeight]\n" +
+                "      ,[TailWeight]\n" +
+                "      ,[Title]" +
+                "  FROM [rozn].[dbo].[MetaFrequency]\n";
     }
 
     public String getQueryFromParseNom(ForecastParseNom nomenclature) {
@@ -45,7 +52,7 @@ public class ForeCastParseNomQuery implements SQLQueries<ForecastParseNom> {
 
         queryBuilder.append(getQuery());
         AddQueryConditions();
-
+        queryBuilder.append("))\n order by TovarId");
         return queryBuilder.toString();
 
     }
@@ -82,7 +89,6 @@ public class ForeCastParseNomQuery implements SQLQueries<ForecastParseNom> {
                     chooseOptionFill(condition);
                 }
             }
-            queryBuilder.append(")\n order by TovarId");
         }
     }
 
@@ -128,9 +134,30 @@ public class ForeCastParseNomQuery implements SQLQueries<ForecastParseNom> {
     }
 
     @Override
-    public ForecastParseNom getElement(ResultSet executeQuery) throws SQLException {
+    public NomenclatureFrequency getElement(ResultSet executeQuery) throws SQLException {
 
-        ForecastParseNom.Builder builder = new ForecastParseNom.Builder(executeQuery.getString("ForecastTovarTitle").toLowerCase());
+        ForecastParseNom nom = getForecastParseNomFromResultSet(executeQuery);
+
+        int brandF = executeQuery.getInt("BrandFrequency");
+        int catalogF = executeQuery.getInt("CatalogFrequency");
+        int gradeF = executeQuery.getInt("GradeFrequency");
+        int sodaF = executeQuery.getInt("sodaFrequency");
+        int taraF = executeQuery.getInt("taraFrequency");
+        int temperatureF = executeQuery.getInt("temperatureFrequency");
+        int unitF = executeQuery.getInt("BrandFrequency");
+        int metaWeight = executeQuery.getInt("MetaWeight");
+        int tailWeight = executeQuery.getInt("TailWeight");
+
+        NomenclatureFrequency.Builder builder = new NomenclatureFrequency.Builder(nom);
+        return builder.setBrandFrequency(brandF).setCatalogFrequency(catalogF).setGradeFrequency(gradeF)
+                .setSodaFrequency(sodaF).setTaraFrequency(taraF).setTemperatureFrequency(temperatureF).setUnitFrequency(unitF)
+                .setMetaWeight(metaWeight).setTailWeight(tailWeight).Build();
+
+    }
+
+    private ForecastParseNom getForecastParseNomFromResultSet(ResultSet executeQuery) throws SQLException {
+        ForecastParseNom.Builder forecastParseNomBuilder = new ForecastParseNom.Builder(executeQuery.getString("ForecastTovarTitle").toLowerCase());
+
 
         int brand = executeQuery.getInt("BrandId");
         int catalog = executeQuery.getInt("CatalogId");
@@ -145,8 +172,11 @@ public class ForeCastParseNomQuery implements SQLQueries<ForecastParseNom> {
         String tails = executeQuery.getString("Tails");
         int tovarId = executeQuery.getInt("TovarId");
 
-        return builder.setBrandId(brand).setCatalog(catalog).setGrade(grade).setSoda(soda)
+
+        return forecastParseNomBuilder.setBrandId(brand).setCatalog(catalog).setGrade(grade).setSoda(soda)
                 .setTara(tara).setTemperature(temperature).setUnit(unit).setCountUnitName(count)
                 .setTailList(tails).setForecastTovarId(tovarId).build();
     }
+
+
 }

@@ -1,5 +1,6 @@
 package main.java.systems;
 
+import main.java.common.obj.sqlObjects.NomenclatureFrequency;
 import main.java.common.sqlQQ.ForeCastParseNomQuery;
 import main.java.common.obj.sqlCollections.*;
 import main.java.common.obj.sqlCollections.meta.*;
@@ -70,8 +71,8 @@ public class SQLBaseQuery {
         return map;
     }
 
-    public LinkedList<ForecastParseNom> getParseListFromBase(ForecastParseNom nom) throws SQLException {
-        LinkedList<ForecastParseNom> reply = new LinkedList<>();
+    public LinkedList<NomenclatureFrequency> getParseListFromBase(ForecastParseNom nom) throws SQLException {
+        LinkedList<NomenclatureFrequency> reply = new LinkedList<>();
         ForeCastParseNomQuery foreCastParseNomQuery = new ForeCastParseNomQuery();
         ResultSet executeQuery = createResultSet(foreCastParseNomQuery.getQueryFromParseNom(nom));
 
@@ -155,6 +156,28 @@ public class SQLBaseQuery {
 
     public void insertTailes(Set<String> tailSet){
 
+        String insertQuery = "";
+
+        int count = 0;
+        for (String s : tailSet) {
+            insertQuery+= "insert into dbo.tails (Name)\n";
+            insertQuery+= "values ('" + s + "')\n";
+            count++;
+            if (count >= 1000) {
+                try {
+                    InsertInSql(insertQuery);
+                } catch (SQLException throwables) {
+                    throwables.printStackTrace();
+                }
+                insertQuery = "";
+                count = 0;
+            }
+        }
+        try {
+            InsertInSql(insertQuery);
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
     }
 
 
