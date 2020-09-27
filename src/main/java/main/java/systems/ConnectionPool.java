@@ -8,9 +8,9 @@ import java.util.Vector;
 
 public class ConnectionPool {
 
-    private String url;
-    private Vector<Connection> availableConns = new Vector<>();
-    private Vector<Connection> usedConns = new Vector<>();
+    private final String url;
+    private final Vector<Connection> availableConns = new Vector<>();
+    private final Vector<Connection> usedConns = new Vector<>();
 
 
     {
@@ -47,7 +47,7 @@ public class ConnectionPool {
     }
 
     public synchronized Connection retrieve() {
-        Connection newConn = null;
+        Connection newConn;
         if (availableConns.size() == 0) {
             newConn = getConnection();
         } else {
